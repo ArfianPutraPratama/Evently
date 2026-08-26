@@ -1,0 +1,17 @@
+# Root .gitignore for Evently
+node_modules/
+vendor/
+.env
+.env.backup
+.env.production
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+pgdata/
+dist/
+build/
+.DS_Store
+Thumbs.db
+*.log
