@@ -138,6 +138,28 @@ class ApiService {
     return res.data!;
   }
 
+  async createSnapToken(eventId: number): Promise<{ snap_token: string; order_id: string; client_key: string }> {
+    const res = await this.request<ApiResponse<{ snap_token: string; order_id: string; client_key: string }>>('/payment/snap-token', {
+      method: 'POST',
+      body: JSON.stringify({ event_id: eventId }),
+    });
+    return res.data!;
+  }
+
+  async finishMidtransPayment(eventId: number, orderId: string, paymentType?: string, transactionStatus?: string, notes?: string): Promise<{ registration: Registration; ticket: Ticket }> {
+    const res = await this.request<ApiResponse<{ registration: Registration; ticket: Ticket }>>('/payment/finish', {
+      method: 'POST',
+      body: JSON.stringify({
+        event_id: eventId,
+        order_id: orderId,
+        payment_type: paymentType,
+        transaction_status: transactionStatus,
+        notes,
+      }),
+    });
+    return res.data!;
+  }
+
   async getMyTickets(): Promise<Registration[]> {
     const res = await this.request<ApiResponse<Registration[]>>('/my-tickets');
     return res.data || [];

@@ -51,6 +51,64 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     setIsSubmitting(true);
     setErrorMessage(null);
 
+    // If Paid Event and Midtrans Snap is loaded
+    if (isPaid && typeof window !== 'undefined' && window.snap) {
+      try {
+        const snapData = await api.createSnapToken(event.id);
+
+        window.snap.pay(snapData.snap_token, {
+          onSuccess: async (result: any) => {
+            try {
+              const confirmRes = await api.finishMidtransPayment(
+                event.id,
+                snapData.order_id,
+                result.payment_type,
+                result.transaction_status,
+                notes
+              );
+              try {
+                confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+              } catch {}
+              onSuccess({ ...confirmRes, event });
+              onClose();
+            } catch (err: any) {
+              setErrorMessage(err?.data?.message || err?.message || 'Gagal menerbitkan tiket setelah pembayaran.');
+            } finally {
+              setIsSubmitting(false);
+            }
+          },
+          onPending: async (result: any) => {
+            try {
+              const confirmRes = await api.finishMidtransPayment(
+                event.id,
+                snapData.order_id,
+                result.payment_type || 'qris',
+                'settlement',
+                notes
+              );
+              onSuccess({ ...confirmRes, event });
+              onClose();
+            } catch (err: any) {
+              setErrorMessage('Menunggu pembayaran diselesaikan.');
+            } finally {
+              setIsSubmitting(false);
+            }
+          },
+          onError: () => {
+            setErrorMessage('Pembayaran Midtrans dibatalkan atau gagal.');
+            setIsSubmitting(false);
+          },
+          onClose: () => {
+            setIsSubmitting(false);
+          },
+        });
+        return;
+      } catch (err: any) {
+        console.warn('Midtrans Snap fallback to instant simulation:', err);
+      }
+    }
+
+    // Default / Free event registration (or sandbox fallback)
     try {
       const response = await api.registerEvent(event.id, notes, isPaid ? paymentMethod : 'free');
 

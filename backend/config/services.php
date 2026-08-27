@@ -31,4 +31,11 @@ return [
         ],
     ],
 
+    'midtrans' => [
+        'merchant_id' => env('MIDTRANS_MERCHANT_ID', 'G441882517'),
+        'client_key' => env('MIDTRANS_CLIENT_KEY', 'SB-Mid-client-Qx6UwA5DFHHUPt2B'),
+        'server_key' => env('MIDTRANS_SERVER_KEY', 'SB-Mid-server-pk8dlBip3clCK6pGOmkSAF18'),
+        'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
+    ],
+
 ];

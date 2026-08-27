@@ -34,6 +34,10 @@ services:
       DB_DATABASE: evently_db
       DB_USERNAME: postgres
       DB_PASSWORD: password
+      MIDTRANS_MERCHANT_ID: G441882517
+      MIDTRANS_CLIENT_KEY: SB-Mid-client-Qx6UwA5DFHHUPt2B
+      MIDTRANS_SERVER_KEY: SB-Mid-server-pk8dlBip3clCK6pGOmkSAF18
+      MIDTRANS_IS_PRODUCTION: "false"
     ports:
       - "8080:8080"
     networks:

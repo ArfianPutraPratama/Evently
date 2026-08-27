@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CheckInController;
 use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\RegistrationController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,7 @@ Route::prefix('auth')->group(function () {
 Route::get('/events', [EventController::class, 'index']);
 Route::get('/events/{idOrSlug}', [EventController::class, 'show']);
 Route::get('/tickets/verify/{ticketCode}', [RegistrationController::class, 'showTicket']);
+Route::post('/payment/notification', [PaymentController::class, 'handleNotification']);
 
 // --- Authenticated Endpoints (All Logged-in Users) ---
 Route::middleware('auth:sanctum')->group(function () {
@@ -34,6 +36,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/registrations', [RegistrationController::class, 'register']);
     Route::get('/my-tickets', [RegistrationController::class, 'myTickets']);
     Route::get('/my-tickets/{ticketCode}', [RegistrationController::class, 'showTicket']);
+
+    // Midtrans Payment Endpoints
+    Route::post('/payment/snap-token', [PaymentController::class, 'createSnapToken']);
+    Route::post('/payment/finish', [PaymentController::class, 'finishPayment']);
 
     // --- Committee & Admin Endpoints (Ticket Check-in Gate) ---
     Route::middleware('role:committee,admin')->group(function () {
