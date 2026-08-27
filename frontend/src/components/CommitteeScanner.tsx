@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 import { CheckInLog } from '../types';
-import { QrCode, Search, CheckCircle2, AlertTriangle, XCircle, Clock, User, ShieldCheck, Sparkles, RefreshCw, Volume2 } from 'lucide-react';
+import { Html5Qrcode } from 'html5-qrcode';
+import { QrCode, Search, CheckCircle2, AlertTriangle, XCircle, Clock, ShieldCheck, RefreshCw, Volume2, Camera, Keyboard, Upload, StopCircle, UserCheck } from 'lucide-react';
 
 export const CommitteeScanner: React.FC = () => {
+  const [scanMode, setScanMode] = useState<'camera' | 'manual' | 'upload' | 'desk'>('manual');
   const [ticketInput, setTicketInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<{
     status: 'success' | 'duplicate' | 'invalid' | null;
     message: string;
@@ -13,21 +17,45 @@ export const CommitteeScanner: React.FC = () => {
   }>({ status: null, message: '' });
   const [recentLogs, setRecentLogs] = useState<CheckInLog[]>([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [gateStats, setGateStats] = useState<{
+    total_registered: number;
+    total_checked_in: number;
+    total_waiting: number;
+    check_in_rate: number;
+    events: { id: number; title: string; registered_count: number; quota: number; checked_in_count: number }[];
+  } | null>(null);
+  const [selectedGateEventId, setSelectedGateEventId] = useState<string>('all');
 
-  const fetchLogs = async () => {
+  // Emergency Desk Search State
+  const [deskSearch, setDeskSearch] = useState('');
+  const [deskAttendees, setDeskAttendees] = useState<any[]>([]);
+  const [isSearchingDesk, setIsSearchingDesk] = useState(false);
+
+  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+
+  const fetchLogsAndStats = async () => {
     try {
       const logs = await api.getCheckInLogs();
-      setRecentLogs(logs);
+      if (Array.isArray(logs)) setRecentLogs(logs);
     } catch (e) {
       console.error('Failed to load check-in logs', e);
+    }
+
+    try {
+      const stats = await api.getGateStats();
+      if (stats) setGateStats(stats);
+    } catch (e) {
+      console.error('Failed to load gate stats', e);
     }
   };
 
   useEffect(() => {
-    fetchLogs();
+    fetchLogsAndStats();
+    return () => {
+      stopCamera();
+    };
   }, []);
 
-  // Web Audio feedback
   const playSound = (type: 'success' | 'duplicate') => {
     if (!soundEnabled) return;
     try {
@@ -38,34 +66,34 @@ export const CommitteeScanner: React.FC = () => {
       gain.connect(audioCtx.destination);
 
       if (type === 'success') {
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } else {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(146.83, audioCtx.currentTime + 0.15);
         gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
         osc.start();
         osc.stop(audioCtx.currentTime + 0.35);
-      } else {
-        // Low buzz warning
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-        osc.frequency.setValueAtTime(146.83, audioCtx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.4);
       }
     } catch {}
   };
 
-  const handleValidateTicket = async (codeToTest?: string) => {
-    const code = (codeToTest || ticketInput).trim();
-    if (!code) return;
+  const handleValidateTicket = async (rawCodeOrPayload?: string) => {
+    const text = (rawCodeOrPayload || ticketInput).trim();
+    if (!text) return;
 
     setIsProcessing(true);
     setLastResult({ status: null, message: '' });
 
     try {
-      const response = await api.checkIn(code);
+      const isJson = text.startsWith('{');
+      const response = await api.checkIn(isJson ? undefined : text, isJson ? text : undefined);
       setLastResult({
         status: 'success',
         message: response.message || 'Check-in Berhasil!',
@@ -73,10 +101,9 @@ export const CommitteeScanner: React.FC = () => {
       });
       playSound('success');
       setTicketInput('');
-      fetchLogs();
+      fetchLogsAndStats();
     } catch (err: any) {
       if (err.status === 409) {
-        // Duplicate check-in rejected!
         setLastResult({
           status: 'duplicate',
           message: err.data?.message || 'PERINGATAN: Tiket ini SUDAH PERNAH di-check in!',
@@ -90,124 +117,461 @@ export const CommitteeScanner: React.FC = () => {
         });
         playSound('duplicate');
       }
-      fetchLogs();
+      fetchLogsAndStats();
     } finally {
       setIsProcessing(false);
     }
   };
 
+  // Camera Management
+  const startCamera = async () => {
+    setCameraError(null);
+    try {
+      if (!html5QrCodeRef.current) {
+        html5QrCodeRef.current = new Html5Qrcode('qr-camera-stream');
+      }
+
+      await html5QrCodeRef.current.start(
+        { facingMode: 'environment' },
+        {
+          fps: 10,
+          qrbox: { width: 220, height: 220 },
+          aspectRatio: 1.0,
+        },
+        (decodedText) => {
+          // Success callback
+          handleValidateTicket(decodedText);
+        },
+        () => {
+          // ignore frame errors
+        }
+      );
+      setIsCameraActive(true);
+    } catch (err: any) {
+      console.error('Camera failed to start', err);
+      setCameraError(err.message || 'Kamera tidak dapat diakses atau diblokir oleh peramban.');
+      setIsCameraActive(false);
+    }
+  };
+
+  const stopCamera = async () => {
+    if (html5QrCodeRef.current && isCameraActive) {
+      try {
+        await html5QrCodeRef.current.stop();
+        html5QrCodeRef.current.clear();
+      } catch (e) {
+        console.error('Error stopping camera', e);
+      } finally {
+        setIsCameraActive(false);
+      }
+    }
+  };
+
+  // Image Upload Scanner
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const scanner = new Html5Qrcode('qr-hidden-canvas');
+      const decodedText = await scanner.scanFile(file, true);
+      handleValidateTicket(decodedText);
+      scanner.clear();
+    } catch (err: any) {
+      alert('Gagal mendeteksi QR Code dari gambar yang diunggah. Pastikan gambar jelas.');
+    }
+  };
+
+  const searchDeskAttendees = async (query = deskSearch) => {
+    setIsSearchingDesk(true);
+    try {
+      const results = await api.searchGateAttendees(query, selectedGateEventId);
+      setDeskAttendees(results);
+    } catch (e) {
+      console.error('Failed to search desk attendees', e);
+    } finally {
+      setIsSearchingDesk(false);
+    }
+  };
+
+  const handleSwitchTab = async (mode: 'camera' | 'manual' | 'upload' | 'desk') => {
+    if (scanMode === 'camera' && mode !== 'camera') {
+      await stopCamera();
+    }
+    setScanMode(mode);
+    if (mode === 'camera') {
+      setTimeout(() => startCamera(), 100);
+    }
+    if (mode === 'desk') {
+      searchDeskAttendees('');
+    }
+  };
+
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-8 animate-fade-in">
-      {/* Header Info */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl glass-panel-glow border-slate-800">
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
+      <div id="qr-hidden-canvas" className="hidden" />
+
+      {/* Minimal Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl elegant-card">
         <div>
-          <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-1">
             <ShieldCheck className="w-4 h-4" />
-            <span>Gatekeeper Terminal — SurabayaDev 12th Anniversary</span>
+            <span>Gatekeeper Terminal • SurabayaDev 12th</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
-            Validasi & Check-In Tiket
+          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            Validasi Tiket Pintu Masuk
           </h1>
-          <p className="text-xs text-slate-400 mt-1 max-w-xl">
-            Sistem validasi pintu masuk acara dilengkapi <strong>Pencegahan Duplicate Check-In Atomik</strong> berbasis transaksi PostgreSQL.
+          <p className="text-xs text-zinc-400 mt-1">
+            Validasi presensi peserta dengan pemindai kamera QR Code dan pencegahan duplicate check-in atomik.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 border transition-all ${
               soundEnabled
-                ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300'
-                : 'bg-slate-800 border-slate-700 text-slate-500'
+                ? 'bg-white/[0.06] border-white/10 text-zinc-200'
+                : 'bg-white/[0.02] border-white/[0.05] text-zinc-500'
             }`}
-            title="Audio feedback scanner"
+            title="Toggle audio feedback"
           >
-            <Volume2 className="w-4 h-4" />
-            <span>Audio {soundEnabled ? 'Aktif' : 'Mati'}</span>
+            <Volume2 className="w-3.5 h-3.5" />
+            <span>Audio {soundEnabled ? 'Aktif' : 'Nonaktif'}</span>
           </button>
 
           <button
-            onClick={fetchLogs}
-            className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-all"
-            title="Muat ulang log"
+            onClick={fetchLogsAndStats}
+            className="p-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-zinc-400 hover:text-white transition-all"
+            title="Refresh logs and stats"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      {/* Input & Scanner Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Code Entry & Test Presets */}
-        <div className="lg:col-span-6 space-y-6">
-          <div className="p-6 rounded-3xl glass-panel border border-slate-800 space-y-5">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <QrCode className="w-4 h-4 text-emerald-400" />
-              Input / Scan Kode Tiket Peserta
+      {/* Live Gate Counter Box (Statistik Pintu Masuk Real-Time) */}
+      <div className="p-5 rounded-2xl elegant-card space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.06] pb-3">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
+              Live Gate Counter Presensi
             </h3>
+          </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleValidateTicket();
-              }}
-              className="space-y-3"
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-zinc-500">Filter Event:</span>
+            <select
+              value={selectedGateEventId}
+              onChange={(e) => setSelectedGateEventId(e.target.value)}
+              className="px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs text-zinc-200 focus:outline-none focus:border-white/20"
             >
-              <div className="relative">
-                <input
-                  type="text"
-                  value={ticketInput}
-                  onChange={(e) => setTicketInput(e.target.value.toUpperCase())}
-                  placeholder="Masukkan Kode Tiket (Contoh: TKT-12TH-...)"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-slate-950 border border-slate-700 text-sm font-mono text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-all uppercase tracking-wider"
-                  autoFocus
-                />
-                <Search className="w-5 h-5 text-slate-500 absolute left-3.5 top-3.5" />
+              <option value="all" className="bg-zinc-900 text-white">Semua Acara (Agregat)</option>
+              {gateStats?.events.map((evt) => (
+                <option key={evt.id} value={evt.id.toString()} className="bg-zinc-900 text-white">
+                  {evt.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* 3 Metric Cards */}
+        {(() => {
+          let regCount = gateStats?.total_registered || 0;
+          let checkedCount = gateStats?.total_checked_in || 0;
+          let waitCount = gateStats?.total_waiting || 0;
+          let rate = gateStats?.check_in_rate || 0;
+
+          if (selectedGateEventId !== 'all' && gateStats?.events) {
+            const current = gateStats.events.find((e) => e.id.toString() === selectedGateEventId);
+            if (current) {
+              regCount = current.registered_count;
+              checkedCount = current.checked_in_count || 0;
+              waitCount = Math.max(0, regCount - checkedCount);
+              rate = regCount > 0 ? Math.round((checkedCount / regCount) * 100) : 0;
+            }
+          }
+
+          return (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-1">
+                <span className="text-[10px] text-zinc-500 uppercase font-semibold block">Total Pendaftar di Gate</span>
+                <p className="text-xl font-bold text-white">{regCount} <span className="text-xs font-normal text-zinc-500">Peserta</span></p>
+                <p className="text-[11px] text-zinc-500">Kapasitas resmi terdaftar</p>
               </div>
 
-              <button
-                type="submit"
-                disabled={isProcessing || !ticketInput.trim()}
-                className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-              >
-                {isProcessing ? 'Memvalidasi Tiket...' : 'Validasi & Check-In Sekarang'}
-              </button>
-            </form>
+              <div className="p-3.5 rounded-xl bg-emerald-500/[0.05] border border-emerald-500/20 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-emerald-400 uppercase font-semibold block">Sudah Masuk (Checked In)</span>
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">{rate}%</span>
+                </div>
+                <p className="text-xl font-bold text-emerald-400">{checkedCount} <span className="text-xs font-normal text-emerald-500">Hadir</span></p>
+                <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${rate}%` }} />
+                </div>
+              </div>
 
-            {/* Quick Demo Test Presets (Specially prepared for review!) */}
-            <div className="pt-2 border-t border-slate-800/80">
-              <span className="text-[11px] font-bold text-slate-400 block mb-2 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                Uji Coba Cepat (Demo Presets untuk Reviewer):
+              <div className="p-3.5 rounded-xl bg-amber-500/[0.05] border border-amber-500/20 space-y-1">
+                <span className="text-[10px] text-amber-400 uppercase font-semibold block">Belum Hadir (Antrean)</span>
+                <p className="text-xl font-bold text-amber-400">{waitCount} <span className="text-xs font-normal text-amber-500">Menunggu</span></p>
+                <p className="text-[11px] text-zinc-500">Tiket valid belum check-in</p>
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+
+      {/* Scanner & Input Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* Left Column: Multi-mode Scanner */}
+        <div className="lg:col-span-6 space-y-4">
+          <div className="p-5 rounded-2xl elegant-card space-y-4">
+            {/* Mode Switcher Tabs */}
+            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                Mode Pemindaian:
               </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="flex items-center gap-1 bg-white/[0.04] p-1 rounded-xl border border-white/[0.06]">
                 <button
                   type="button"
-                  onClick={() => {
-                    handleValidateTicket('TKT-12TH-F39HBPBR');
-                  }}
-                  className="p-3 text-left rounded-xl bg-slate-950/80 border border-slate-800 hover:border-emerald-500/40 transition-all group"
+                  onClick={() => handleSwitchTab('camera')}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                    scanMode === 'camera'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
                 >
-                  <span className="text-[10px] font-bold text-emerald-400 block">UJI TIKET VALID</span>
-                  <span className="text-xs font-mono text-slate-200 block group-hover:text-white">
-                    TKT-12TH-F39HBPBR
-                  </span>
-                  <span className="text-[10px] text-slate-500 block mt-0.5">Tiket Budi Developer</span>
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>Kamera Live</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => {
-                    handleValidateTicket('TKT-12TH-CHECKED');
-                  }}
-                  className="p-3 text-left rounded-xl bg-slate-950/80 border border-slate-800 hover:border-rose-500/40 transition-all group"
+                  onClick={() => handleSwitchTab('manual')}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                    scanMode === 'manual'
+                      ? 'bg-white/[0.1] text-white font-semibold'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
                 >
-                  <span className="text-[10px] font-bold text-rose-400 block">UJI DUPLICATE CHECK-IN</span>
-                  <span className="text-xs font-mono text-slate-200 block group-hover:text-white">
-                    TKT-12TH-CHECKED
-                  </span>
-                  <span className="text-[10px] text-slate-500 block mt-0.5">Tiket Siti (Sudah Pernah Masuk)</span>
+                  <Keyboard className="w-3.5 h-3.5" />
+                  <span>Ketik / Preset</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSwitchTab('upload')}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                    scanMode === 'upload'
+                      ? 'bg-white/[0.1] text-white font-semibold'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>File QR</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSwitchTab('desk')}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                    scanMode === 'desk'
+                      ? 'bg-white/[0.1] text-white font-semibold'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <UserCheck className="w-3.5 h-3.5" />
+                  <span>Cari Peserta</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 1. Camera Mode */}
+            {scanMode === 'camera' && (
+              <div className="space-y-3">
+                <div className="relative rounded-2xl overflow-hidden bg-black border border-white/[0.08] min-h-[260px] flex items-center justify-center">
+                  <div id="qr-camera-stream" className="w-full max-w-sm overflow-hidden" />
+
+                  {!isCameraActive && !cameraError && (
+                    <div className="text-center p-6 space-y-3">
+                      <Camera className="w-8 h-8 text-emerald-400 mx-auto animate-pulse" />
+                      <p className="text-xs text-zinc-300">Menghubungkan ke kamera perangkat...</p>
+                      <button
+                        type="button"
+                        onClick={startCamera}
+                        className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold"
+                      >
+                        Aktifkan Kamera Sekarang
+                      </button>
+                    </div>
+                  )}
+
+                  {cameraError && (
+                    <div className="text-center p-6 space-y-2 text-xs text-rose-300">
+                      <AlertTriangle className="w-6 h-6 text-rose-400 mx-auto" />
+                      <p className="font-semibold">Izin Kamera Ditolak / Tidak Ditemukan</p>
+                      <p className="text-[11px] text-zinc-400">{cameraError}</p>
+                      <button
+                        type="button"
+                        onClick={() => handleSwitchTab('manual')}
+                        className="mt-2 px-3 py-1 rounded-lg bg-white/[0.08] text-white text-xs"
+                      >
+                        Beralih ke Input Manual / Preset
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {isCameraActive && (
+                  <button
+                    type="button"
+                    onClick={stopCamera}
+                    className="w-full py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 text-xs font-semibold flex items-center justify-center gap-2"
+                  >
+                    <StopCircle className="w-3.5 h-3.5" />
+                    <span>Hentikan Kamera</span>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* 2. Manual Keyboard Mode */}
+            {scanMode === 'manual' && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleValidateTicket();
+                }}
+                className="space-y-3"
+              >
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={ticketInput}
+                    onChange={(e) => setTicketInput(e.target.value.toUpperCase())}
+                    placeholder="Ketik Kode Tiket (misal: TKT-12TH-F39HBPBR)"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs font-mono text-white placeholder-zinc-500 focus:outline-none focus:border-white/20 transition-all uppercase tracking-wider"
+                    autoFocus
+                  />
+                  <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isProcessing || !ticketInput.trim()}
+                  className="w-full py-2.5 px-4 rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 font-semibold text-xs transition-all disabled:opacity-40"
+                >
+                  {isProcessing ? 'Memvalidasi...' : 'Validasi & Presensi Masuk'}
+                </button>
+              </form>
+            )}
+
+            {/* 3. Upload QR Image Mode */}
+            {scanMode === 'upload' && (
+              <div className="space-y-3">
+                <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/[0.1] hover:border-emerald-500/40 rounded-2xl cursor-pointer bg-white/[0.02] transition-all">
+                  <Upload className="w-8 h-8 text-zinc-400 mb-2" />
+                  <span className="text-xs font-semibold text-zinc-200">Klik untuk Unggah Gambar QR Code</span>
+                  <span className="text-[11px] text-zinc-500 mt-0.5">Mendukung format PNG, JPG, JPEG</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            )}
+
+            {/* 4. Emergency Desk Search Mode */}
+            {scanMode === 'desk' && (
+              <div className="space-y-3">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={deskSearch}
+                    onChange={(e) => {
+                      setDeskSearch(e.target.value);
+                      searchDeskAttendees(e.target.value);
+                    }}
+                    placeholder="Ketik nama peserta / email / institusi..."
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white/20 transition-all"
+                    autoFocus
+                  />
+                  <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
+                </div>
+
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  {isSearchingDesk ? (
+                    <div className="p-4 text-center text-zinc-500 text-xs">Mencari data pendaftar...</div>
+                  ) : deskAttendees.length === 0 ? (
+                    <div className="p-4 text-center text-zinc-500 text-xs">
+                      {deskSearch ? 'Tidak ada peserta yang cocok.' : 'Ketik nama atau email peserta untuk mencari.'}
+                    </div>
+                  ) : (
+                    deskAttendees.map((reg) => (
+                      <div
+                        key={reg.id}
+                        className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] flex items-center justify-between gap-3 text-xs"
+                      >
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h5 className="font-semibold text-white truncate">{reg.user?.name}</h5>
+                            <span className="font-mono text-[10px] text-zinc-400 px-1.5 py-0.5 rounded bg-white/[0.04]">
+                              {reg.ticket?.ticket_code}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-zinc-400 truncate">{reg.user?.email}</p>
+                          <p className="text-[10px] text-zinc-500 truncate">{reg.event?.title}</p>
+                        </div>
+
+                        <div className="shrink-0">
+                          {reg.ticket?.status === 'checked_in' ? (
+                            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
+                              Sudah Masuk
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleValidateTicket(reg.ticket?.ticket_code)}
+                              disabled={isProcessing}
+                              className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-bold transition-all shadow-sm"
+                            >
+                              Presensi Darurat
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Preset Buttons for Reviewer Testing */}
+            <div className="pt-3 border-t border-white/[0.06] space-y-2">
+              <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block">
+                Preset Cepat Reviewer (Sekali Klik):
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleValidateTicket('TKT-12TH-F39HBPBR')}
+                  className="p-2.5 text-left rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.06] transition-all"
+                >
+                  <span className="text-[10px] font-semibold text-emerald-400 block">Uji Tiket Valid</span>
+                  <span className="text-xs font-mono text-zinc-300 block truncate">TKT-12TH-F39HBPBR</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleValidateTicket('TKT-12TH-CHECKED')}
+                  className="p-2.5 text-left rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.06] transition-all"
+                >
+                  <span className="text-[10px] font-semibold text-rose-400 block">Uji Duplicate Check-in</span>
+                  <span className="text-xs font-mono text-zinc-300 block truncate">TKT-12TH-CHECKED</span>
                 </button>
               </div>
             </div>
@@ -217,175 +581,150 @@ export const CommitteeScanner: React.FC = () => {
         {/* Right Column: Scan Result Alert Box */}
         <div className="lg:col-span-6 flex flex-col">
           {lastResult.status === 'success' && (
-            <div className="p-6 rounded-3xl bg-emerald-950/40 border-2 border-emerald-500/60 shadow-2xl shadow-emerald-500/20 text-white space-y-4 animate-slide-up">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="w-7 h-7 text-emerald-400" />
-                </div>
+            <div className="p-5 rounded-2xl bg-emerald-500/[0.08] border border-emerald-500/20 text-white space-y-3 animate-slide-up h-full">
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
                 <div>
-                  <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-400">
-                    STATUS: CHECK-IN BERHASIL
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block">
+                    Validasi Berhasil
                   </span>
-                  <h4 className="text-lg font-bold text-white leading-tight">
-                    {lastResult.data?.attendee_name || 'Peserta'}
+                  <h4 className="text-sm font-bold text-white">
+                    {lastResult.data?.attendee_name}
                   </h4>
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-950/70 border border-emerald-500/20 text-xs space-y-2">
+              <div className="p-3 rounded-xl bg-black/40 border border-emerald-500/10 text-xs space-y-1.5">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Kode Tiket:</span>
-                  <span className="font-mono font-bold text-emerald-300">{lastResult.data?.ticket_code}</span>
+                  <span className="text-zinc-400">Kode:</span>
+                  <span className="font-mono text-emerald-300">{lastResult.data?.ticket_code}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Email:</span>
-                  <span className="text-slate-200 font-mono text-[11px]">{lastResult.data?.attendee_email}</span>
+                  <span className="text-zinc-400">Email:</span>
+                  <span className="text-zinc-200">{lastResult.data?.attendee_email}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Institusi:</span>
-                  <span className="text-slate-200">{lastResult.data?.organization || 'Umum'}</span>
+                  <span className="text-zinc-400">Acara:</span>
+                  <span className="text-zinc-200 line-clamp-1">{lastResult.data?.event_title}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Acara:</span>
-                  <span className="text-slate-200 font-semibold line-clamp-1">{lastResult.data?.event_title}</span>
-                </div>
-                <div className="flex justify-between pt-1 border-t border-slate-800 text-[11px]">
-                  <span className="text-slate-400">Waktu Masuk:</span>
-                  <span className="text-emerald-400 font-bold">{lastResult.data?.checked_in_at}</span>
+                  <span className="text-zinc-400">Waktu Masuk:</span>
+                  <span className="text-emerald-400 font-medium">{lastResult.data?.checked_in_at}</span>
                 </div>
               </div>
-
-              <p className="text-xs text-emerald-300/90 text-center font-semibold">
-                Silakan persilakan peserta masuk dan berikan badge / seminar kit.
-              </p>
             </div>
           )}
 
           {lastResult.status === 'duplicate' && (
-            <div className="p-6 rounded-3xl bg-rose-950/50 border-2 border-rose-500/70 shadow-2xl shadow-rose-500/20 text-white space-y-4 animate-slide-up">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center shrink-0">
-                  <AlertTriangle className="w-7 h-7 text-rose-400 animate-pulse" />
-                </div>
+            <div className="p-5 rounded-2xl bg-rose-500/[0.08] border border-rose-500/20 text-white space-y-3 animate-slide-up h-full">
+              <div className="flex items-center gap-2.5">
+                <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
                 <div>
-                  <span className="text-[11px] font-extrabold uppercase tracking-widest text-rose-400">
-                    PERINGATAN: DUPLICATE CHECK-IN TERDETEKSI!
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 block">
+                    Duplicate Check-In Ditolak
                   </span>
-                  <h4 className="text-base font-bold text-white leading-tight">
-                    Tiket Ini Sudah Pernah Digunakan
+                  <h4 className="text-sm font-bold text-white">
+                    Tiket Sudah Pernah Digunakan
                   </h4>
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-950/80 border border-rose-500/30 text-xs space-y-2 text-rose-200">
-                <p className="text-xs text-rose-300 leading-relaxed font-semibold">
-                  {lastResult.message}
-                </p>
-                <div className="pt-2 border-t border-rose-900/40 space-y-1 text-[11px]">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Pemilik Tiket:</span>
-                    <span className="font-bold text-white">{lastResult.data?.attendee_name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Waktu Check-In Pertama:</span>
-                    <span className="font-bold text-rose-400">{lastResult.data?.checked_in_at}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Divalidasi Oleh:</span>
-                    <span className="text-slate-200">{lastResult.data?.checked_in_by}</span>
-                  </div>
+              <div className="p-3 rounded-xl bg-black/40 border border-rose-500/10 text-xs space-y-1.5 text-zinc-300">
+                <div className="flex justify-between">
+                  <span className="text-zinc-400">Pemilik:</span>
+                  <span className="text-white font-medium">{lastResult.data?.attendee_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-400">Check-in Pertama:</span>
+                  <span className="text-rose-400 font-medium">{lastResult.data?.checked_in_at}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-400">Divalidasi Oleh:</span>
+                  <span className="text-zinc-300">{lastResult.data?.checked_in_by}</span>
                 </div>
               </div>
-
-              <p className="text-xs text-rose-300/80 text-center">
-                Mohon tahan peserta untuk verifikasi identitas fisik atau kartu tanda pengenal.
-              </p>
             </div>
           )}
 
           {lastResult.status === 'invalid' && (
-            <div className="p-6 rounded-3xl bg-amber-950/40 border-2 border-amber-500/60 text-white space-y-3 animate-slide-up">
-              <div className="flex items-center gap-3">
-                <XCircle className="w-8 h-8 text-amber-400 shrink-0" />
-                <div>
-                  <h4 className="font-bold text-base text-amber-300">Tiket Tidak Valid</h4>
-                  <p className="text-xs text-slate-300">{lastResult.message}</p>
-                </div>
+            <div className="p-5 rounded-2xl bg-amber-500/[0.08] border border-amber-500/20 text-white space-y-2 animate-slide-up h-full flex flex-col justify-center">
+              <div className="flex items-center gap-2 text-amber-400">
+                <XCircle className="w-5 h-5" />
+                <h4 className="font-semibold text-xs">Tiket Tidak Valid</h4>
               </div>
+              <p className="text-xs text-zinc-400">{lastResult.message}</p>
             </div>
           )}
 
           {lastResult.status === null && (
-            <div className="h-full min-h-[220px] p-8 rounded-3xl glass-panel border border-dashed border-slate-800 flex flex-col items-center justify-center text-center text-slate-500 space-y-2">
-              <QrCode className="w-12 h-12 text-slate-700 stroke-[1.5]" />
-              <p className="text-xs font-semibold text-slate-400">Menunggu Pemindaian Tiket</p>
-              <p className="text-[11px] text-slate-600 max-w-xs">
-                Ketik kode tiket di sebelah kiri atau klik tombol uji coba cepat di atas.
-              </p>
+            <div className="h-full min-h-[180px] p-6 rounded-2xl border border-dashed border-white/[0.07] flex flex-col items-center justify-center text-center text-zinc-500 space-y-1">
+              <QrCode className="w-8 h-8 text-zinc-700" />
+              <p className="text-xs font-medium text-zinc-400">Menunggu Pemindaian</p>
+              <p className="text-[11px] text-zinc-600">Aktifkan kamera live, ketik kode tiket, atau pilih preset cepat.</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Recent Check-In Audit Logs Feed */}
-      <div className="p-6 rounded-3xl glass-panel border border-slate-800 space-y-4">
+      {/* Audit Trail Table */}
+      <div className="p-5 rounded-2xl elegant-card space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <Clock className="w-4 h-4 text-indigo-400" />
-            Riwayat Aktivitas Gate (Audit Trail Real-Time)
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5 text-zinc-400" />
+            Audit Trail Pemindaian Real-Time
           </h3>
-          <span className="text-xs text-slate-500">{recentLogs.length} Aktivitas Tercatat</span>
+          <span className="text-[11px] text-zinc-500">{recentLogs.length} tercatat</span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-800 text-slate-400 font-semibold">
-                <th className="pb-3 px-2">WAKTU</th>
-                <th className="pb-3 px-2">KODE TIKET</th>
-                <th className="pb-3 px-2">PESERTA</th>
-                <th className="pb-3 px-2">HASIL VALIDASI</th>
-                <th className="pb-3 px-2">PETUGAS GATE</th>
+              <tr className="border-b border-white/[0.06] text-zinc-500 text-[10px] uppercase font-semibold">
+                <th className="pb-2.5 px-2">WAKTU</th>
+                <th className="pb-2.5 px-2">KODE TIKET</th>
+                <th className="pb-2.5 px-2">PESERTA</th>
+                <th className="pb-2.5 px-2">HASIL</th>
+                <th className="pb-2.5 px-2">PETUGAS</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-850">
+            <tbody className="divide-y divide-white/[0.04]">
               {recentLogs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-6 text-center text-slate-500">
-                    Belum ada aktivitas pemindaian tiket.
+                  <td colSpan={5} className="py-6 text-center text-zinc-500 text-xs">
+                    Belum ada aktivitas pemindaian.
                   </td>
                 </tr>
               ) : (
                 recentLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-900/60 transition-colors">
-                    <td className="py-3 px-2 font-mono text-[11px] text-slate-400">
+                  <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="py-2.5 px-2 font-mono text-[11px] text-zinc-400">
                       {new Date(log.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                     </td>
-                    <td className="py-3 px-2 font-mono font-semibold text-slate-200">
+                    <td className="py-2.5 px-2 font-mono text-zinc-200">
                       {log.ticket?.ticket_code || 'N/A'}
                     </td>
-                    <td className="py-3 px-2 text-white font-medium">
+                    <td className="py-2.5 px-2 text-zinc-300">
                       {log.ticket?.registration?.user?.name || 'Peserta'}
                     </td>
-                    <td className="py-3 px-2">
+                    <td className="py-2.5 px-2">
                       {log.scan_result === 'success' ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400">
                           <CheckCircle2 className="w-3 h-3" />
                           Sukses Masuk
                         </span>
                       ) : log.scan_result === 'duplicate_rejected' ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-400">
                           <AlertTriangle className="w-3 h-3" />
-                          Ditolak (Duplikat)
+                          Duplikat Ditolak
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400">
                           <XCircle className="w-3 h-3" />
                           Tidak Valid
                         </span>
                       )}
                     </td>
-                    <td className="py-3 px-2 text-slate-400 text-[11px]">
+                    <td className="py-2.5 px-2 text-zinc-500 text-[11px]">
                       {log.scanner?.name || 'Gate System'}
                     </td>
                   </tr>

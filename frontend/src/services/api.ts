@@ -135,6 +135,26 @@ class ApiService {
     return res.data || [];
   }
 
+  async getGateStats(): Promise<{
+    total_registered: number;
+    total_checked_in: number;
+    total_waiting: number;
+    check_in_rate: number;
+    events: { id: number; title: string; registered_count: number; quota: number; checked_in_count: number }[];
+  }> {
+    const res = await this.request<ApiResponse<any>>('/check-in/stats');
+    return res.data || { total_registered: 0, total_checked_in: 0, total_waiting: 0, check_in_rate: 0, events: [] };
+  }
+
+  async searchGateAttendees(search = '', eventId = ''): Promise<Registration[]> {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (eventId && eventId !== 'all') params.append('event_id', eventId);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    const res = await this.request<ApiResponse<Registration[]>>(`/check-in/attendees${query}`);
+    return res.data || [];
+  }
+
   // --- Admin APIs ---
   async getAdminDashboard(): Promise<{ metrics: DashboardMetrics; events_summary: any[] }> {
     const res = await this.request<ApiResponse<{ metrics: DashboardMetrics; events_summary: any[] }>>('/admin/dashboard');

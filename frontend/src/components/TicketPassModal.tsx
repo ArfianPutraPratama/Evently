@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Registration, Ticket } from '../types';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, Calendar, MapPin, Download, Check, ShieldCheck, UserCheck, Sparkles, Printer } from 'lucide-react';
+import { X, Calendar, MapPin, Check, ShieldCheck, Printer, Copy } from 'lucide-react';
 
 interface TicketPassModalProps {
   registration: Registration | null;
@@ -37,151 +37,156 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-md my-8 rounded-3xl overflow-hidden shadow-2xl border border-indigo-500/30 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-sm my-6 rounded-2xl overflow-hidden bg-[#11131a] border border-white/[0.08] shadow-2xl">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-slate-950/70 border border-slate-700 text-slate-400 hover:text-white transition-all print:hidden"
+          className="absolute top-3.5 right-3.5 z-20 p-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 hover:text-white transition-all print:hidden"
         >
           <X className="w-4 h-4" />
         </button>
 
-        {/* Printable Pass Container */}
-        <div id="printable-ticket" className="p-6 space-y-6">
-          {/* Header Pass */}
-          <div className="relative pb-4 border-b border-dashed border-slate-800">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-md shadow-indigo-600/30">
-                  <Sparkles className="w-4 h-4 text-amber-300" />
-                </div>
-                <div>
-                  <span className="font-extrabold text-sm text-white tracking-tight">SurabayaDev</span>
-                  <span className="text-[10px] block text-indigo-400 font-mono">Official E-Ticket Pass</span>
-                </div>
-              </div>
-
+        {/* Boarding Pass Body */}
+        <div id="printable-ticket" className="p-6 space-y-5">
+          {/* Header */}
+          <div className="space-y-2 border-b border-white/[0.06] pb-4 pr-8">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+                SurabayaDev 12th • Pass
+              </span>
               {ticket.status === 'checked_in' ? (
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5">
-                  <Check className="w-3.5 h-3.5" />
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                   CHECKED IN
                 </span>
               ) : (
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5" />
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/[0.08] text-zinc-300 border border-white/10">
                   VALID PASS
                 </span>
               )}
             </div>
 
-            <h3 className="text-base font-extrabold text-white leading-snug">
+            <h3 className="text-base font-bold text-white leading-snug">
               {event.title}
             </h3>
-            <span className="inline-block mt-1 text-[11px] font-semibold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+            <span className="inline-block text-[10px] uppercase font-semibold text-zinc-400">
               {event.category}
             </span>
           </div>
 
-          {/* Schedule & Location */}
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800">
-              <span className="text-[10px] text-slate-500 font-semibold block mb-1 flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-indigo-400" />
-                WAKTU
-              </span>
-              <p className="font-bold text-slate-200">
-                {new Date(event.event_date).toLocaleDateString('id-ID', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                })}
-              </p>
-              <p className="text-[11px] text-slate-400">
-                {new Date(event.event_date).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
-              </p>
-            </div>
-
-            <div className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800">
-              <span className="text-[10px] text-slate-500 font-semibold block mb-1 flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-rose-400" />
-                LOKASI
-              </span>
-              <p className="font-bold text-slate-200 line-clamp-1">{event.location}</p>
-              <p className="text-[11px] text-slate-400">Surabaya, ID</p>
-            </div>
-          </div>
-
-          {/* Attendee Details */}
-          <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800/80 space-y-2 text-xs">
-            <div className="flex justify-between items-center text-slate-400 text-[11px]">
-              <span>Nama Peserta:</span>
-              <span className="font-bold text-white text-xs">{user?.name || 'Peserta'}</span>
-            </div>
-            <div className="flex justify-between items-center text-slate-400 text-[11px]">
-              <span>Email Terdaftar:</span>
-              <span className="text-slate-300 font-mono text-[11px]">{user?.email}</span>
-            </div>
-            <div className="flex justify-between items-center text-slate-400 text-[11px]">
-              <span>Institusi / Org:</span>
-              <span className="text-slate-300">{user?.organization || 'Umum'}</span>
-            </div>
-          </div>
-
-          {/* QR Code Section */}
-          <div className="p-5 rounded-2xl bg-white text-slate-900 flex flex-col items-center justify-center space-y-3 shadow-inner">
-            <div className="p-2 bg-white rounded-xl shadow-sm border border-slate-200">
-              <QRCodeSVG
-                value={ticket.qr_payload || ticket.ticket_code}
-                size={180}
-                level="H"
-                includeMargin={false}
-              />
-            </div>
-            <div className="text-center">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block mb-0.5">
-                Kode Tiket Resmi
-              </span>
-              <div className="flex items-center justify-center gap-2">
-                <span className="font-mono font-extrabold text-sm tracking-wider text-slate-900 bg-slate-100 px-3 py-1 rounded-lg border border-slate-300">
-                  {ticket.ticket_code}
-                </span>
-                <button
-                  type="button"
-                  onClick={handleCopyCode}
-                  className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-all print:hidden"
-                >
-                  {copied ? 'Tersalin!' : 'Salin'}
-                </button>
+          {/* Key Details with Action Links */}
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-1.5 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] text-zinc-500 block uppercase font-medium">Waktu</span>
+                <p className="font-semibold text-zinc-200">
+                  {new Date(event.event_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </p>
+                <p className="text-[11px] text-zinc-400">
+                  {new Date(event.event_date).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                </p>
               </div>
+
+              <a
+                href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${new Date(event.event_date).toISOString().replace(/-|:|\.\d\d\d/g, '')}/${new Date(new Date(event.event_date).getTime() + 4 * 3600000).toISOString().replace(/-|:|\.\d\d\d/g, '')}&details=${encodeURIComponent(event.description)}&location=${encodeURIComponent(event.location)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-[10px] font-semibold text-indigo-400 hover:text-indigo-300 pt-1 transition-colors print:hidden"
+              >
+                <Calendar className="w-3 h-3" />
+                <span>+ Google Calendar</span>
+              </a>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-1.5 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] text-zinc-500 block uppercase font-medium">Lokasi</span>
+                <p className="font-semibold text-zinc-200 line-clamp-1">{event.location.split(',')[0]}</p>
+                <p className="text-[11px] text-zinc-400">Surabaya</p>
+              </div>
+
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-400 hover:text-rose-300 pt-1 transition-colors print:hidden"
+              >
+                <MapPin className="w-3 h-3" />
+                <span>Buka Google Maps</span>
+              </a>
             </div>
           </div>
 
-          {/* Security & Gate Instruction */}
-          <div className="space-y-1 text-center">
-            <p className="text-[10px] text-slate-400">
-              Tunjukkan QR Code ini kepada panitia gatekeeper saat registrasi ulang di venue.
+          {/* Attendee Info */}
+          <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-1 text-xs">
+            <div className="flex justify-between">
+              <span className="text-zinc-500">Nama:</span>
+              <span className="font-semibold text-white">{user?.name || 'Budi Developer'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-zinc-500">Email:</span>
+              <span className="text-zinc-300 font-mono text-[11px]">{user?.email || 'peserta@surabayadev.org'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-zinc-500">Institusi:</span>
+              <span className="text-zinc-300">{user?.organization || 'Institut Teknologi Sepuluh Nopember'}</span>
+            </div>
+          </div>
+
+          {/* Perforated Divider Line */}
+          <div className="relative py-1">
+            <div className="border-b border-dashed border-white/[0.1]" />
+          </div>
+
+          {/* Minimalist QR Code */}
+          <div className="flex flex-col items-center justify-center space-y-3 bg-white p-4 rounded-xl">
+            <QRCodeSVG
+              value={ticket.qr_payload || ticket.ticket_code}
+              size={160}
+              level="H"
+              includeMargin={false}
+            />
+            <div className="text-center">
+              <span className="font-mono text-xs font-bold text-zinc-900 tracking-wider">
+                {ticket.ticket_code}
+              </span>
+            </div>
+          </div>
+
+          {/* Security Subtext */}
+          <div className="text-center space-y-1">
+            <p className="text-[10px] text-zinc-500">
+              Tunjukkan kode QR kepada panitia di pintu masuk venue acara.
             </p>
-            <div className="flex items-center justify-center gap-1.5 text-[9px] text-indigo-400 font-mono">
+            <div className="flex items-center justify-center gap-1 text-[9px] text-zinc-600 font-mono">
               <ShieldCheck className="w-3 h-3" />
-              <span>HMAC Signed Cryptographic Pass • Anti-Forgery</span>
+              <span>HMAC Cryptographically Verified</span>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-3 pt-2 print:hidden">
+          {/* Actions */}
+          <div className="grid grid-cols-3 gap-2 pt-2 print:hidden">
+            <button
+              onClick={handleCopyCode}
+              className="py-2 px-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-zinc-300 text-xs font-medium flex items-center justify-center gap-1 transition-all"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              <span>{copied ? 'Disalin' : 'Salin'}</span>
+            </button>
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(`Halo! Saya sudah terdaftar di "${event.title}" (SurabayaDev 12th Anniversary)! Kode Tiket: ${ticket.ticket_code}. Lokasi: ${event.location} 🚀`)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="py-2 px-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-medium flex items-center justify-center gap-1 transition-all"
+            >
+              <span>Share WA</span>
+            </a>
             <button
               onClick={handlePrint}
-              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-800 text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm"
+              className="py-2 px-2.5 rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-sm"
             >
-              <Printer className="w-4 h-4 text-indigo-400" />
-              <span>Cetak / PDF</span>
-            </button>
-            <button
-              onClick={onClose}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/25 text-center"
-            >
-              Selesai
+              <Printer className="w-3.5 h-3.5" />
+              <span>Cetak</span>
             </button>
           </div>
         </div>

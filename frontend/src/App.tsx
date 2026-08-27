@@ -11,13 +11,14 @@ import { CommitteeScanner } from './components/CommitteeScanner';
 import { AdminDashboard } from './components/AdminDashboard';
 import { MyTicketsView } from './components/MyTicketsView';
 import { AuthModal } from './components/AuthModal';
-import { Search, Sparkles, Calendar, ShieldCheck, Zap, ArrowRight, Loader2, Heart } from 'lucide-react';
+import { Search, Loader2, X } from 'lucide-react';
 
 export const App: React.FC = () => {
-  const { user, role } = useAuth();
+  const { user } = useAuth();
 
   // Navigation State
   const [currentTab, setCurrentTab] = useState<'events' | 'my-tickets' | 'scanner' | 'admin'>('events');
+  const [showAnnouncement, setShowAnnouncement] = useState(true);
 
   // Events & Catalog State
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -51,16 +52,14 @@ export const App: React.FC = () => {
     fetchEvents();
   }, [selectedCategory]);
 
-  // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchEvents();
-    }, 300);
+    }, 250);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
   const handleRegistrationSuccess = (res: { registration: Registration; ticket: Ticket; event: EventItem }) => {
-    // Update local event count
     setEvents((prev) =>
       prev.map((evt) =>
         evt.id === res.event.id
@@ -74,7 +73,6 @@ export const App: React.FC = () => {
           : evt
       )
     );
-    // Show digital ticket pass modal immediately!
     setActiveTicketRegistration({
       ...res.registration,
       event: res.event,
@@ -98,95 +96,96 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
-      {/* Header Navigation */}
+    <div className="min-h-screen bg-[#090a0f] text-slate-100 flex flex-col justify-between selection:bg-indigo-500/30 selection:text-indigo-200">
+      {/* Sleek Minimalist Navbar */}
       <Navbar
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
       />
 
-      {/* Main Tab Content */}
+      {/* Live Announcement Banner */}
+      {showAnnouncement && (
+        <div className="bg-indigo-500/[0.08] border-b border-indigo-500/20 text-xs py-2 px-4 relative flex items-center justify-center gap-2 animate-fade-in print:hidden">
+          <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold text-[10px] tracking-wider uppercase inline-flex items-center gap-1.5 shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Live Notice
+          </span>
+          <span className="text-zinc-300 font-medium text-[11px] sm:text-xs truncate sm:overflow-visible">
+            📢 Pintu Gate Dyandra Convention Center dibuka pukul 08.00 WIB • Harap siapkan QR Code tiket digital Anda untuk mempercepat validasi presensi.
+          </span>
+          <button
+            onClick={() => setShowAnnouncement(false)}
+            className="p-1 rounded-md text-zinc-500 hover:text-zinc-200 transition-colors ml-2"
+            title="Tutup pengumuman"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
       <main className="flex-grow">
         {currentTab === 'events' && (
-          <div className="space-y-12 pb-16">
-            {/* Hero Section */}
-            <section className="relative overflow-hidden pt-12 pb-16 px-4 sm:px-6 lg:px-8 border-b border-slate-800/80 bg-gradient-to-b from-indigo-950/25 via-slate-950 to-slate-950">
-              <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-indigo-600/15 blur-[120px] rounded-full pointer-events-none" />
-              <div className="absolute top-1/2 right-10 w-[300px] h-[300px] bg-amber-500/10 blur-[100px] rounded-full pointer-events-none" />
-
-              <div className="max-w-4xl mx-auto text-center space-y-6 relative z-10">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold backdrop-blur-md">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>12 Tahun Membangun Talenta Digital Kota Pahlawan</span>
+          <div className="space-y-12 pb-20">
+            {/* Minimalist Hero Section */}
+            <section className="relative pt-16 pb-14 px-4 sm:px-6 lg:px-8 border-b border-white/[0.05] bg-subtle-dots">
+              <div className="max-w-4xl mx-auto text-center space-y-5">
+                {/* Subtle Indicator Pill */}
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] text-zinc-400 text-[11px] font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>SurabayaDev 12th Anniversary • Official Event Platform</span>
                 </div>
 
-                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.15]">
-                  Rayakan Inovasi di{' '}
-                  <span className="bg-gradient-to-r from-amber-400 via-indigo-300 to-indigo-500 bg-clip-text text-transparent">
-                    SurabayaDev 12th
-                  </span>{' '}
-                  Anniversary
+                <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.2]">
+                  Merayakan 12 Tahun Perjalanan <br className="hidden sm:block" />
+                  <span className="text-zinc-400 font-normal">Komunitas Developer Kota Surabaya</span>
                 </h1>
 
-                <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
-                  Platform resmi pendaftaran conference, hands-on workshop, hackathon, dan masterclass.
-                  Dapatkan tiket digital ber-QR Code dengan verifikasi instan di venue.
+                <p className="text-xs sm:text-sm text-zinc-400 max-w-xl mx-auto leading-relaxed">
+                  Pendaftaran resmi sesi Conference, Hands-on Workshop, Hackathon, dan Masterclass dengan sistem tiket digital ber-QR Code terenkripsi.
                 </p>
 
-                {/* Key Metrics / Highlights */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto pt-4 text-left">
-                  <div className="p-3.5 rounded-2xl glass-panel border border-slate-800">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Kapasitas</span>
-                    <span className="text-xl font-extrabold text-white">1.000+</span>
-                    <span className="text-[10px] text-indigo-400 block mt-0.5">Peserta Target</span>
+                {/* Minimalist Stat Strip */}
+                <div className="pt-6 grid grid-cols-3 max-w-lg mx-auto divide-x divide-white/[0.08] border-y border-white/[0.06] py-3 text-center">
+                  <div>
+                    <span className="text-lg sm:text-xl font-bold text-white block">1.000+</span>
+                    <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Kuota Peserta</span>
                   </div>
-
-                  <div className="p-3.5 rounded-2xl glass-panel border border-slate-800">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Teknologi</span>
-                    <span className="text-xl font-extrabold text-white">Full-Stack</span>
-                    <span className="text-[10px] text-amber-400 block mt-0.5">React + Laravel</span>
+                  <div>
+                    <span className="text-lg sm:text-xl font-bold text-white block">PostgreSQL</span>
+                    <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Row Lock Quota</span>
                   </div>
-
-                  <div className="p-3.5 rounded-2xl glass-panel border border-slate-800">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Basis Data</span>
-                    <span className="text-xl font-extrabold text-white">PostgreSQL</span>
-                    <span className="text-[10px] text-emerald-400 block mt-0.5">Row-Lock Quota</span>
-                  </div>
-
-                  <div className="p-3.5 rounded-2xl glass-panel border border-slate-800">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Gate Access</span>
-                    <span className="text-xl font-extrabold text-white">Anti-Dup</span>
-                    <span className="text-[10px] text-rose-400 block mt-0.5">HMAC QR Pass</span>
+                  <div>
+                    <span className="text-lg sm:text-xl font-bold text-white block">Anti-Dup</span>
+                    <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Gate Check-In</span>
                   </div>
                 </div>
               </div>
             </section>
 
             {/* Catalog Discovery Section */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-              {/* Search and Filters Bar */}
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 rounded-3xl glass-panel border border-slate-800">
-                {/* Category Pills */}
-                <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none">
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+              {/* Refined Search & Filter Toolbar */}
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-2">
+                {/* Minimal Category Buttons */}
+                <div className="flex items-center gap-1 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
                   <button
                     onClick={() => setSelectedCategory('all')}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 ${
                       selectedCategory === 'all'
-                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                        : 'text-slate-400 hover:text-white bg-slate-900/60 hover:bg-slate-800'
+                        ? 'bg-white text-zinc-950 font-semibold'
+                        : 'text-zinc-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.06]'
                     }`}
                   >
-                    Semua Kategori
+                    Semua
                   </button>
                   {categories.map((cat) => (
                     <button
                       key={cat}
                       onClick={() => setSelectedCategory(cat)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 ${
                         selectedCategory === cat
-                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                          : 'text-slate-400 hover:text-white bg-slate-900/60 hover:bg-slate-800'
+                          ? 'bg-white text-zinc-950 font-semibold'
+                          : 'text-zinc-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.06]'
                       }`}
                     >
                       {cat}
@@ -194,35 +193,34 @@ export const App: React.FC = () => {
                   ))}
                 </div>
 
-                {/* Search Bar */}
-                <div className="relative w-full md:w-80">
+                {/* Minimal Search Input */}
+                <div className="relative w-full md:w-72">
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Cari event, pembicara, venue..."
-                    className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+                    placeholder="Cari acara atau topik..."
+                    className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white/20 transition-all"
                   />
-                  <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                  <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-2.5" />
                 </div>
               </div>
 
               {/* Event Cards Grid */}
               {isLoadingEvents ? (
-                <div className="py-20 text-center text-slate-400 space-y-3">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-indigo-500" />
-                  <p className="text-xs">Memuat katalog acara SurabayaDev...</p>
+                <div className="py-20 text-center text-zinc-400 space-y-3">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-zinc-400" />
+                  <p className="text-xs">Memuat katalog acara...</p>
                 </div>
               ) : events.length === 0 ? (
-                <div className="p-12 rounded-3xl glass-panel border border-slate-800 text-center space-y-3">
-                  <Calendar className="w-12 h-12 text-slate-600 mx-auto" />
-                  <h3 className="text-base font-bold text-white">Event Tidak Ditemukan</h3>
-                  <p className="text-xs text-slate-400">
-                    Tidak ada event yang cocok dengan kata kunci "{searchQuery}". Coba kata kunci lain atau reset filter.
+                <div className="p-12 rounded-2xl border border-white/[0.06] text-center space-y-2 max-w-sm mx-auto">
+                  <h3 className="text-sm font-semibold text-white">Event Tidak Ditemukan</h3>
+                  <p className="text-xs text-zinc-500">
+                    Tidak ada event dengan kata kunci "{searchQuery}".
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {events.map((evt) => (
                     <EventCard
                       key={evt.id}
@@ -280,20 +278,17 @@ export const App: React.FC = () => {
         onClose={() => setIsAuthModalOpen(false)}
       />
 
-      {/* Global Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950/90 py-8 px-4 sm:px-6 lg:px-8 text-xs text-slate-400 print:hidden">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      {/* Minimal Footer */}
+      <footer className="border-t border-white/[0.05] bg-[#090a0f] py-6 px-4 sm:px-6 lg:px-8 text-xs text-zinc-500 print:hidden">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-xs">
-              S
-            </div>
-            <span className="font-bold text-slate-200">SurabayaDev 12th Anniversary</span>
-            <span className="text-slate-600">•</span>
-            <span>Technical Assessment Divisi Developer</span>
+            <span className="font-semibold text-zinc-300">SurabayaDev 12th Anniversary</span>
+            <span>•</span>
+            <span>Developer Team Technical Assessment</span>
           </div>
 
-          <div className="flex items-center gap-2 font-mono text-[11px] text-slate-500">
-            <span>Tech Stack: React 19 + TypeScript + Vite + Tailwind + Laravel 11 + PostgreSQL 18</span>
+          <div className="font-mono text-zinc-600">
+            React + TypeScript + Laravel + PostgreSQL
           </div>
         </div>
       </footer>

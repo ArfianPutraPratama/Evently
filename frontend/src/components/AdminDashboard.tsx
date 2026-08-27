@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { DashboardMetrics, EventItem, Registration } from '../types';
-import { ShieldCheck, Plus, Users, Calendar, CheckCircle2, Ticket, Edit3, Trash2, Search, X, Loader2, RefreshCw } from 'lucide-react';
+import { ShieldCheck, Plus, Users, Calendar, CheckCircle2, Ticket, Edit3, Trash2, Search, X, Loader2, RefreshCw, Download, Check } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
@@ -62,6 +62,58 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     fetchAttendees();
   }, [selectedEventId, attendeeStatus]);
+
+  const exportToCSV = () => {
+    if (attendees.length === 0) {
+      alert('Tidak ada data peserta untuk diekspor.');
+      return;
+    }
+
+    const currentEvent = eventsSummary.find((e) => e.id === selectedEventId);
+    const eventTitle = currentEvent ? currentEvent.title : 'Event';
+
+    // CSV header with UTF-8 BOM for Excel compatibility
+    let csvContent = '\uFEFF';
+    csvContent += 'No,Kode Registrasi,Kode Tiket,Nama Peserta,Email,Institusi / Organisasi,Status Kehadiran,Waktu Check-In,Tanggal Mendaftar\n';
+
+    attendees.forEach((att, index) => {
+      const no = index + 1;
+      const regCode = `"${att.registration_code || ''}"`;
+      const ticketCode = `"${att.ticket?.ticket_code || ''}"`;
+      const name = `"${(att.user?.name || '').replace(/"/g, '""')}"`;
+      const email = `"${(att.user?.email || '').replace(/"/g, '""')}"`;
+      const org = `"${(att.user?.organization || 'Umum').replace(/"/g, '""')}"`;
+      const status = att.ticket?.status === 'checked_in' ? 'Checked In' : 'Belum Masuk';
+      const checkInTime = att.ticket?.checked_in_at
+        ? `"${new Date(att.ticket.checked_in_at).toLocaleString('id-ID')}"`
+        : '-';
+      const regTime = `"${new Date(att.registered_at).toLocaleString('id-ID')}"`;
+
+      csvContent += `${no},${regCode},${ticketCode},${name},${email},${org},${status},${checkInTime},${regTime}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const filename = `peserta-${eventTitle.toLowerCase().replace(/[^a-z0-9]/g, '_')}-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleManualCheckIn = async (ticketCode: string) => {
+    if (!ticketCode) return;
+    try {
+      await api.checkIn(ticketCode);
+      fetchAttendees();
+      fetchDashboard();
+    } catch (e: any) {
+      alert(e.message || 'Gagal menandai kehadiran');
+    }
+  };
 
   const handleOpenCreateModal = () => {
     setEditingEvent(null);
@@ -287,8 +339,19 @@ export const AdminDashboard: React.FC = () => {
               </p>
             </div>
 
-            {/* Filter controls */}
-            <div className="flex items-center gap-2">
+            {/* Filter & Export controls */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={exportToCSV}
+                disabled={attendees.length === 0}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-semibold transition-all disabled:opacity-40"
+                title="Unduh daftar peserta format CSV / Excel"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Export CSV ({attendees.length})</span>
+              </button>
+
               <div className="relative">
                 <input
                   type="text"
@@ -324,19 +387,20 @@ export const AdminDashboard: React.FC = () => {
                   <th className="pb-3 px-3">EMAIL & INSTITUSI</th>
                   <th className="pb-3 px-3">STATUS KEHADIRAN</th>
                   <th className="pb-3 px-3">WAKTU DAFTAR</th>
+                  <th className="pb-3 px-3 text-right">AKSI</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-850">
                 {isLoadingAttendees ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-slate-400">
+                    <td colSpan={7} className="py-8 text-center text-slate-400">
                       <Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-400" />
                       <span className="text-xs block mt-2">Memuat data peserta...</span>
                     </td>
                   </tr>
                 ) : attendees.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-slate-500">
+                    <td colSpan={7} className="py-8 text-center text-slate-500">
                       Belum ada peserta terdaftar untuk event ini.
                     </td>
                   </tr>
@@ -371,6 +435,21 @@ export const AdminDashboard: React.FC = () => {
                       </td>
                       <td className="py-3 px-3 text-slate-400 font-mono text-[11px]">
                         {new Date(att.registered_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        {att.ticket?.status !== 'checked_in' ? (
+                          <button
+                            type="button"
+                            onClick={() => handleManualCheckIn(att.ticket?.ticket_code || '')}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/25 border border-emerald-500/20 text-emerald-400 text-[11px] font-semibold transition-all"
+                            title="Tandai kehadiran peserta ini secara manual"
+                          >
+                            <Check className="w-3 h-3" />
+                            <span>Presensi</span>
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-zinc-500 font-mono">Tervalidasi</span>
+                        )}
                       </td>
                     </tr>
                   ))
