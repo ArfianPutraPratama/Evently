@@ -19,7 +19,27 @@ class ApiService {
   }
 
   public getToken(): string | null {
+    if (!this.token) {
+      this.token = localStorage.getItem('evently_token');
+    }
     return this.token;
+  }
+
+  public getUser(): User | null {
+    try {
+      const stored = localStorage.getItem('evently_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  public saveUser(user: User | null) {
+    if (user) {
+      localStorage.setItem('evently_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('evently_user');
+    }
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {

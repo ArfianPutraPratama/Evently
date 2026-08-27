@@ -15,21 +15,31 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Synchronous initialization from localStorage so there is ZERO delay or logout flash on refresh
+  const [user, setUser] = useState<User | null>(() => api.getUser());
+  const [isLoading, setIsLoading] = useState<boolean>(!api.getUser());
 
   const refreshUser = async () => {
-    if (!api.getToken()) {
+    const token = api.getToken();
+    if (!token) {
       setUser(null);
+      api.saveUser(null);
       setIsLoading(false);
       return;
     }
     try {
       const data = await api.getMe();
-      setUser(data.user);
-    } catch {
-      api.setToken(null);
-      setUser(null);
+      if (data?.user) {
+        setUser(data.user);
+        api.saveUser(data.user);
+      }
+    } catch (err: any) {
+      // Only clear if status is 401 Unauthorized (token revoked or expired)
+      if (err?.status === 401) {
+        api.setToken(null);
+        api.saveUser(null);
+        setUser(null);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -44,6 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const data = await api.login(email, pass);
       setUser(data.user);
+      api.saveUser(data.user);
     } finally {
       setIsLoading(false);
     }
@@ -54,6 +65,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await api.logout();
     } finally {
+      api.setToken(null);
+      api.saveUser(null);
       setUser(null);
       setIsLoading(false);
     }
@@ -68,6 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const data = await api.login(email, 'password');
       setUser(data.user);
+      api.saveUser(data.user);
     } finally {
       setIsLoading(false);
     }
