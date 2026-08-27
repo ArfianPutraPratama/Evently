@@ -3,7 +3,9 @@ import { ApiResponse, CheckInLog, DashboardMetrics, EventItem, Registration, Tic
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   (typeof window !== 'undefined'
-    ? `${window.location.protocol}//${window.location.hostname}:8080/api`
+    ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? `http://${window.location.hostname}:8080/api`
+        : '/api')
     : 'http://127.0.0.1:8080/api');
 
 class ApiService {
