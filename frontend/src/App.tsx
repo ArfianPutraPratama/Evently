@@ -17,16 +17,53 @@ import { Search, Loader2, X, Clock, ArrowRight, CheckCircle2, ShieldCheck, Spark
 export const App: React.FC = () => {
   const { user } = useAuth();
 
-  // Navigation State
-  const [currentTab, setCurrentTab] = useState<'events' | 'my-tickets' | 'scanner' | 'admin'>('events');
+  // Persistent Navigation State (preserves active tab across browser refreshes)
+  const getInitialTab = (): 'events' | 'my-tickets' | 'scanner' | 'admin' => {
+    const hash = window.location.hash.replace('#', '');
+    if (['events', 'my-tickets', 'scanner', 'admin'].includes(hash)) {
+      return hash as any;
+    }
+    const saved = localStorage.getItem('evently_active_tab');
+    if (saved && ['events', 'my-tickets', 'scanner', 'admin'].includes(saved)) {
+      return saved as any;
+    }
+    return 'events';
+  };
+
+  const [currentTab, setCurrentTabState] = useState<'events' | 'my-tickets' | 'scanner' | 'admin'>(getInitialTab);
   const [showAnnouncement, setShowAnnouncement] = useState(true);
 
-  // Automatically redirect to 'events' (Katalog Acara) whenever user logs out
+  const setCurrentTab = (tab: 'events' | 'my-tickets' | 'scanner' | 'admin') => {
+    setCurrentTabState(tab);
+    localStorage.setItem('evently_active_tab', tab);
+    try {
+      if (tab === 'events') {
+        window.history.replaceState(null, '', window.location.pathname);
+      } else {
+        window.history.replaceState(null, '', `#${tab}`);
+      }
+    } catch {}
+  };
+
+  // Sync with browser Back/Forward navigation
   useEffect(() => {
-    if (!user && currentTab !== 'events') {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (['events', 'my-tickets', 'scanner', 'admin'].includes(hash)) {
+        setCurrentTabState(hash as any);
+        localStorage.setItem('evently_active_tab', hash);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // When user is not logged in, redirect restricted tabs back to 'events'
+  useEffect(() => {
+    if (!user && (currentTab === 'my-tickets' || currentTab === 'scanner' || currentTab === 'admin')) {
       setCurrentTab('events');
     }
-  }, [user, currentTab]);
+  }, [user]);
 
   // Events & Catalog State
   const [events, setEvents] = useState<EventItem[]>([]);
