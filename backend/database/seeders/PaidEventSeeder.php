@@ -1,0 +1,1 @@
+<?php namespace Database\Seeders; use App\Models\Event; use Illuminate\Database\Seeder; class PaidEventSeeder extends Seeder { public function run(): void { echo " Seeder Loaded\; } }

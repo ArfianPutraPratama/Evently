@@ -245,5 +245,8 @@ class DatabaseSeeder extends Seeder
         $microservices->update(['registered_count' => 12]);
         $aiHackathon->update(['registered_count' => 45]);
         $webMasterclass->update(['registered_count' => 29]);
+
+        // 6. Seed Additional Paid Events for Midtrans Testing
+        ->call(PaidEventSeeder::class);
     }
 }
