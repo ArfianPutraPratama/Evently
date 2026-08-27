@@ -18,6 +18,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Skip seeding if already seeded to prevent unique constraint error
+        if (User::where('email', 'admin@surabayadev.org')->exists()) {
+            return;
+        }
+
         // 1. Create Core Users
         $admin = User::create([
             'name' => 'Admin SurabayaDev',

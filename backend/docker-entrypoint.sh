@@ -11,7 +11,7 @@ echo "Menjalankan migrasi basis data..."
 php artisan migrate --force
 
 echo "Memasukkan data seeder awal..."
-php artisan db:seed --force
+php artisan db:seed --force || true
 
 echo "Menyalakan Laravel REST API pada port 8080..."
 exec php artisan serve --host=0.0.0.0 --port=8080
