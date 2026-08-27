@@ -114,6 +114,7 @@ class DatabaseSeeder extends Seeder
             'end_date' => '2026-10-17 16:00:00',
             'quota' => 80,
             'registered_count' => 0,
+            'price' => 150000,
             'banner_url' => 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&auto=format&fit=crop&q=80',
             'speaker_name' => 'Rendra Pratama',
             'speaker_role' => 'Full-Stack Solution Architect',
@@ -190,10 +191,54 @@ class DatabaseSeeder extends Seeder
             'created_at' => now()->subMinutes(25),
         ]);
 
+        // 5. Register Budi to the VIP Masterclass (Paid Ticket via QRIS)
+        $regCodeVip = 'REG-VIP-' . strtoupper(Str::random(6));
+        $ticketCodeVip = 'TKT-VIP-' . strtoupper(Str::random(8));
+        $payloadDataVip = [
+            'ticket_code' => $ticketCodeVip,
+            'event_id' => $webMasterclass->id,
+            'user_id' => $budi->id,
+            'event_title' => $webMasterclass->title,
+            'issued_at' => now()->subHour()->toISOString(),
+        ];
+        $hmacVip = hash_hmac('sha256', json_encode($payloadDataVip), $secretKey);
+
+        $regVip = Registration::create([
+            'event_id' => $webMasterclass->id,
+            'user_id' => $budi->id,
+            'registration_code' => $regCodeVip,
+            'status' => 'confirmed',
+            'notes' => 'VIP Seat - Fullstack Workshop participant',
+            'registered_at' => now()->subHour(),
+            'payment_status' => 'paid',
+            'payment_method' => 'qris',
+            'amount_paid' => 150000,
+        ]);
+
+        $ticketVip = Ticket::create([
+            'registration_id' => $regVip->id,
+            'ticket_code' => $ticketCodeVip,
+            'qr_payload' => json_encode(array_merge($payloadDataVip, ['hmac' => $hmacVip])),
+            'hmac_signature' => $hmacVip,
+            'status' => 'checked_in',
+            'checked_in_at' => now()->subMinutes(10),
+            'checked_in_by' => $committee->id,
+        ]);
+
+        CheckInLog::create([
+            'ticket_id' => $ticketVip->id,
+            'scanned_by' => $committee->id,
+            'scan_result' => 'success',
+            'ip_address' => '127.0.0.1',
+            'device_info' => 'VIP Desk Terminal #1',
+            'notes' => 'VIP ticket verified and checked in',
+            'created_at' => now()->subMinutes(10),
+        ]);
+
         // Update registered counts
         $conference->update(['registered_count' => 2]);
         $microservices->update(['registered_count' => 12]);
         $aiHackathon->update(['registered_count' => 45]);
-        $webMasterclass->update(['registered_count' => 28]);
+        $webMasterclass->update(['registered_count' => 29]);
     }
 }
