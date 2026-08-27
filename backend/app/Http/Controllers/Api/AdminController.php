@@ -28,7 +28,7 @@ class AdminController extends Controller
 
         $eventsSummary = Event::withCount(['registrations'])
             ->withCount(['tickets as checked_in_count' => function ($q) {
-                $q->where('status', 'checked_in');
+                $q->where('tickets.status', 'checked_in');
             }])
             ->orderBy('event_date', 'asc')
             ->get();

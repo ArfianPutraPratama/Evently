@@ -39,6 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:committee,admin')->group(function () {
         Route::post('/check-in', [CheckInController::class, 'checkIn']);
         Route::get('/check-in/logs', [CheckInController::class, 'recentLogs']);
+        Route::get('/check-in/stats', [CheckInController::class, 'gateStats']);
+        Route::get('/check-in/attendees', [CheckInController::class, 'searchAttendees']);
     });
 
     // --- Admin-Only Management Endpoints ---

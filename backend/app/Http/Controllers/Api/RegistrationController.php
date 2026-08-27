@@ -125,7 +125,7 @@ class RegistrationController extends Controller
         $user = $request->user();
 
         $registrations = Registration::where('user_id', $user->id)
-            ->with(['event', 'ticket'])
+            ->with(['event', 'ticket', 'user'])
             ->orderBy('created_at', 'desc')
             ->get();
 

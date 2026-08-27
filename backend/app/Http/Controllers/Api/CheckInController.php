@@ -161,4 +161,69 @@ class CheckInController extends Controller
             'data' => $logs
         ]);
     }
+
+    /**
+     * Get real-time gate statistics for committee gatekeeper counter box.
+     */
+    public function gateStats(): JsonResponse
+    {
+        $totalRegistrations = \App\Models\Registration::count();
+        $totalCheckedIn = Ticket::where('status', 'checked_in')->count();
+        $totalWaiting = Ticket::where('status', 'issued')->count();
+        $checkInRate = $totalRegistrations > 0 ? round(($totalCheckedIn / $totalRegistrations) * 100, 1) : 0;
+
+        $events = \App\Models\Event::select('id', 'title', 'registered_count', 'quota')
+            ->withCount(['tickets as checked_in_count' => function ($q) {
+                $q->where('tickets.status', 'checked_in');
+            }])
+            ->orderBy('event_date', 'asc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total_registered' => $totalRegistrations,
+                'total_checked_in' => $totalCheckedIn,
+                'total_waiting' => $totalWaiting,
+                'check_in_rate' => $checkInRate,
+                'events' => $events,
+            ],
+        ]);
+    }
+
+    /**
+     * Emergency desk search: search attendees by name, email, or registration code.
+     */
+    public function searchAttendees(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $search = $request->query('search', '');
+        $eventId = $request->query('event_id');
+
+        $query = \App\Models\Registration::with(['user', 'event', 'ticket'])
+            ->orderBy('created_at', 'desc');
+
+        if (!empty($eventId) && $eventId !== 'all') {
+            $query->where('event_id', $eventId);
+        }
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($uq) use ($search) {
+                    $uq->where('name', 'ilike', "%{$search}%")
+                       ->orWhere('email', 'ilike', "%{$search}%")
+                       ->orWhere('organization', 'ilike', "%{$search}%");
+                })->orWhere('registration_code', 'ilike', "%{$search}%")
+                  ->orWhereHas('ticket', function ($tq) use ($search) {
+                      $tq->where('ticket_code', 'ilike', "%{$search}%");
+                  });
+            });
+        }
+
+        $attendees = $query->limit(15)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $attendees,
+        ]);
+    }
 }
