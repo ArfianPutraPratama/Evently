@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SurabayaDev Developer Technical Assessment — Arfian Putra Pratama</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0d9488;
+      --primary-dark: #0f766e;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --slate-500: #64748b;
+      --slate-100: #f1f5f9;
+      --slate-50: #f8fafc;
+      --border: #e2e8f0;
+      --accent-amber: #d97706;
+      --accent-emerald: #059669;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--slate-800);
+      background-color: #f8fafc;
+      line-height: 1.65;
+      font-size: 14px;
+      padding: 32px 16px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 48px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+      border: 1px solid var(--border);
+    }
+    header {
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 28px;
+      margin-bottom: 32px;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: #ccfbf1;
+      color: #0f766e;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--slate-900);
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      line-height: 1.25;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: var(--slate-600);
+      margin-bottom: 20px;
+    }
+    .candidate-card {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      background: var(--slate-50);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-top: 16px;
+    }
+    .candidate-item span:first-child {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--slate-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .candidate-item span:last-child {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--slate-900);
+    }
+    .candidate-item a {
+      color: var(--primary);
+      text-decoration: none;
+      word-break: break-all;
+    }
+    .candidate-item a:hover {
+      text-decoration: underline;
+    }
+    h2 {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--slate-900);
+      letter-spacing: -0.01em;
+      margin: 36px 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin: 20px 0 8px 0;
+    }
+    p, li {
+      color: var(--slate-700);
+      margin-bottom: 10px;
+    }
+    ul, ol {
+      padding-left: 20px;
+      margin-bottom: 16px;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+    strong {
+      color: var(--slate-900);
+    }
+    .card {
+      background: var(--slate-50);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      margin: 16px 0;
+    }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    th {
+      background: var(--slate-100);
+      color: var(--slate-900);
+      font-weight: 700;
+    }
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: #f1f5f9;
+      color: #0f766e;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    pre {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      margin: 12px 0 16px 0;
+      line-height: 1.5;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    .highlight-box {
+      border-left: 4px solid var(--primary);
+      background: #f0fdfa;
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+    }
+    .print-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--slate-900);
+      color: #ffffff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      z-index: 100;
+    }
+    .print-btn:hover {
+      background: var(--primary);
+      transform: translateY(-2px);
+    }
+    @media print {
+      body {
+        background: #ffffff;
+        padding: 0;
+        font-size: 11.5px;
+        line-height: 1.5;
+      }
+      .container {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        max-width: 100%;
+      }
+      .print-btn {
+        display: none !important;
+      }
+      h2 {
+        margin-top: 24px;
+        font-size: 15px;
+        page-break-after: avoid;
+      }
+      h3 {
+        font-size: 13px;
+        page-break-after: avoid;
+      }
+      .card, .highlight-box {
+        break-inside: avoid;
+      }
+      pre {
+        white-space: pre-wrap;
+        font-size: 10px;
+      }
+      @page {
+        margin: 15mm 15mm;
+        size: A4 portrait;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="print-btn" onclick="window.print()">
+    🖨️ Cetak / Simpan sebagai PDF
+  </button>
+
+  <div class="container">
+    <header>
+      <div class="badge">Official Technical Submission</div>
+      <h1>SurabayaDev Developer Technical Assessment</h1>
+      <p class="subtitle">Rekrutmen Tim Volunteer Developer — SurabayaDev 12th Anniversary Celebration</p>
+
+      <div class="candidate-card">
+        <div class="candidate-item">
+          <span>Kandidat</span>
+          <span>Arfian Putra Pratama</span>
+        </div>
+        <div class="candidate-item">
+          <span>Fokus Pilihan</span>
+          <span>C. Full-Stack Developer</span>
+        </div>
+        <div class="candidate-item">
+          <span>GitHub Repository</span>
+          <span><a href="https://github.com/ArfianPutraPratama/Evently" target="_blank">github.com/ArfianPutraPratama/Evently</a></span>
+        </div>
+        <div class="candidate-item">
+          <span>Live Demo (Tailscale)</span>
+          <span><a href="http://100.117.102.84:5177" target="_blank">http://100.117.102.84:5177</a></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- PART 1 -->
+    <section>
+      <h2>📌 PART 1: TECHNICAL CASE STUDY</h2>
+
+      <h3>1. System Analysis</h3>
+      <p>Berdasarkan skenario 3.000 user aktif dan 1.000 user melakukan pendaftaran serentak pada kuota tiket terbatas, analisis sistem mencakup:</p>
+      
+      <div class="card">
+        <strong>A. Kebutuhan Fungsional per Role:</strong>
+        <ul>
+          <li><strong>Peserta:</strong> Menjelajahi katalog event dengan pencarian instan, melihat status kuota real-time, mendaftar event (gratis/berbayar via simulasi QRIS & Virtual Account), dan mengunduh tiket digital ber-QR Code dengan tanda tangan kriptografis.</li>
+          <li><strong>Panitia (Gatekeeper):</strong> Memindai QR Code tiket di gerbang masuk via kamera live/input manual, validasi instan (keaslian tanda tangan HMAC), tolak pemindaian tiket ganda, serta audit trail riwayat scan.</li>
+          <li><strong>Admin:</strong> Manajemen penuh data event (CRUD), monitoring kuota terisi, rekap kehadiran aktual (*attendance rate*), serta analisa pendapatan tiket (*revenue analytics*).</li>
+        </ul>
+
+        <strong>B. Kebutuhan Non-Fungsional:</strong>
+        <ul>
+          <li><strong>High Concurrency & Anti-Race Condition:</strong> Kuota tiket bersifat *hard-constraint*, tidak boleh terjadi *overselling* (tiket terdaftar &gt; kuota) saat 1.000 request masuk bersamaan.</li>
+          <li><strong>Integritas & Anti-Pemalsuan Tiket:</strong> QR Code tiket tidak boleh berupa ID biasa, melainkan memuat payload ber-tanda tangan digital <code>HMAC-SHA256</code> berbasis secret key server.</li>
+        </ul>
+
+        <strong>C. Pembagian Tanggung Jawab:</strong>
+        <ul>
+          <li><strong>Frontend:</strong> Validasi data di sisi klien, debounced search (300ms), state management reaktif, rendering QR Code SVG dinamis, feedback audio/visual gerbang presensi, dan pengalaman UX cetak PDF bersih.</li>
+          <li><strong>Backend:</strong> Autentikasi berbasis token (Laravel Sanctum), otorisasi berbasis peran (Role-Based Access Control), orkestrasi transaksi basis data ACID dengan <em>Pessimistic Row Locking</em>, kalkulasi signature kriptografis, pencatatan log audit presensi, dan rate limiting API.</li>
+        </ul>
+      </div>
+
+      <h3>2. Frontend Perspective</h3>
+      <div class="card">
+        <ul>
+          <li><strong>Teknologi yang Digunakan:</strong> React 19 + TypeScript + Vite + Tailwind CSS + Lucide Icons + <code>qrcode.react</code> + <code>canvas-confetti</code>.</li>
+          <li><strong>Struktur Komponen (Atomic Design):</strong>
+            <ul>
+              <li><em>Atoms:</em> Button, Badge, Input, ProgressBar, StatusPill.</li>
+              <li><em>Molecules:</em> SearchBar, QuotaIndicator, EventMetadata, AttendeeRow, PaymentMethodSelector.</li>
+              <li><em>Organisms:</em> EventCard, EventDetailModal, RegistrationModal, TicketPassModal, CommitteeTerminal, AdminDashboard.</li>
+              <li><em>Templates/Views:</em> CatalogView, MyTicketsView, GateScannerView, AdminConsole.</li>
+            </ul>
+          </li>
+          <li><strong>State Management:</strong> Scoped React Context (<code>AuthContext</code>) untuk autentikasi global & token sync dengan persistensi sinkron di <code>localStorage</code> (zero-flicker on refresh), didukung API service layer terisolasi.</li>
+          <li><strong>Strategi Menjaga Performa:</strong>
+            <ul>
+              <li><em>Debouncing:</em> Input pencarian diberi delay 300ms untuk menekan lonjakan request HTTP ke backend.</li>
+              <li><em>Tree Shaking & Code Splitting:</em> Bundle produksi terkompilasi optimal via Vite bundler (total gzip ~192 kB).</li>
+              <li><em>Hardware Acceleration:</em> Animasi modal dan transisi CSS memanfaatkan transform GPU.</li>
+              <li><em>Dynamic Endpoint Resolution:</em> URL API mendeteksi domain/IP secara dinamis, mendukung localhost maupun Tailscale (<code>100.117.102.84</code>) tanpa re-build.</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+
+      <h3>3. Backend Perspective</h3>
+      <div class="card">
+        <ul>
+          <li><strong>Desain Basis Data (PostgreSQL 18):</strong>
+            <ul>
+              <li><code>users</code>: (id, name, email, password, role, phone, organization).</li>
+              <li><code>events</code>: (id, title, slug, category, location, event_date, quota, registered_count, price, banner_url).</li>
+              <li><code>registrations</code>: (id, event_id, user_id, registration_code, status, payment_status, payment_method, amount_paid) dengan <strong>Unique Index <code>(event_id, user_id)</code></strong>.</li>
+              <li><code>tickets</code>: (id, registration_id, ticket_code, qr_payload, hmac_signature, status, checked_in_at, checked_in_by) dengan <strong>Unique Index <code>ticket_code</code></strong>.</li>
+              <li><code>check_in_logs</code>: (id, ticket_id, scanned_by, scan_result, ip_address, notes, created_at).</li>
+            </ul>
+          </li>
+          <li><strong>Pengelolaan Kuota & Anti-Race Condition:</strong>
+            <p>Menerapkan database transaction dipadu dengan <strong>Pessimistic Row Locking</strong>:</p>
+            <pre><code>DB::transaction(function () use ($eventId, $userId) {
+    // Kunci baris event secara eksklusif
+    $event = Event::where('id', $eventId)->lockForUpdate()->first();
+
+    if ($event->registered_count >= $event->quota) {
+        throw new HttpResponseException(response()->json(['message' => 'Kuota tiket sudah habis!'], 422));
+    }
+
+    $event->increment('registered_count');
+    // Simpan pendaftaran & terbitkan tiket ber-HMAC
+});</code></pre>
+            <p>Ketika 1.000 user mendaftar serentak, PostgreSQL mengeksekusi baris secara serial. User ke-1001 otomatis ditolak secara aman dengan HTTP 422 tanpa ada celah kuota bocor (*zero overselling*).</p>
+          </li>
+          <li><strong>Pencegahan Duplicate Check-In:</strong>
+            <p>Saat panitia memindai tiket di pintu gerbang, sistem melakukan verifikasi atomik:</p>
+            <pre><code>$ticket = Ticket::where('ticket_code', $code)->lockForUpdate()->first();
+if ($ticket->status === 'checked_in') {
+    // Catat log pelanggaran dan tolak seketika
+    CheckInLog::create(['ticket_id' => $ticket->id, 'scan_result' => 'duplicate_rejected']);
+    return response()->json(['message' => 'Tiket sudah pernah digunakan!'], 409);
+}
+$ticket->update(['status' => 'checked_in', 'checked_in_at' => now(), 'checked_in_by' => auth()->id()]);</code></pre>
+          </li>
+        </ul>
+      </div>
+
+      <h3>4. Technical Decision</h3>
+      <div class="card">
+        <strong>A. Bagian Tersulit Sistem:</strong>
+        <ol>
+          <li><em>High Write-Contention saat Perebutan Kuota:</em> Terjadinya rebutan kunci baris basis data saat ribuan pendaftar mengakses event populer dalam milidetik yang sama.</li>
+          <li><em>Gatekeeper Double-Scan Hazard:</em> Kemungkinan dua panitia di dua gerbang berbeda memindai tiket yang sama (misal hasil screenshot WhatsApp) dalam waktu bersamaan.</li>
+        </ol>
+
+        <strong>B. Solusi Teknis yang Dipilih:</strong>
+        <ul>
+          <li><strong>Pessimistic Locking vs Optimistic Locking (OCC):</strong> Kami memilih <em>Pessimistic Row Locking</em> (<code>lockForUpdate</code>) daripada OCC dengan version column. Pada kasus kuota tiket terbatas (*high write-contention*), OCC menghasilkan *retry storm* yang membebani CPU server. Pessimistic locking menjamin konsistensi mutlak dengan antrean serial di level database engine.</li>
+          <li><strong>Tanda Tangan Kriptografis HMAC-SHA256:</strong> Menjamin integritas QR Code. Meskipun peserta mencoba memanipulasi isi JSON tiket, signature tidak akan cocok tanpa Server Secret Key.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section>
+      <h2>💻 PART 2: CODING CHALLENGE (FULL-STACK DEVELOPER)</h2>
+      <div class="card">
+        <p>Aplikasi yang dibangun adalah <strong>Evently — Platform Registrasi & Presensi Digital SurabayaDev 12th Anniversary</strong>:</p>
+        <table>
+          <tr>
+            <th style="width: 25%;">Komponen</th>
+            <th>Detail Implementasi</th>
+          </tr>
+          <tr>
+            <td><strong>Frontend Stack</strong></td>
+            <td>React 19, TypeScript, Vite, Tailwind CSS, Lucide Icons, Canvas Confetti, HTML5 QR Scanner.</td>
+          </tr>
+          <tr>
+            <td><strong>Backend Stack</strong></td>
+            <td>Laravel 11 REST API, PostgreSQL 18, Laravel Sanctum Token Auth, HMAC-SHA256 Signing.</td>
+          </tr>
+          <tr>
+            <td><strong>Deployment & Docker</strong></td>
+            <td>Multi-container Docker Compose (PostgreSQL, PHP 8.4 Alpine, Nginx + Node 20) aktif di Server Ubuntu & Tailscale.</td>
+          </tr>
+          <tr>
+            <td><strong>Fitur Pilihan C (Full-Stack)</strong></td>
+            <td>Katalog Event, Pencarian Dinamis, Otentikasi Role (Peserta, Panitia, Admin), Registrasi Kuota Kunci ACID, Boarding Pass QR Code, Cetak PDF Bersih, E-Sertifikat A4 Landscape, Checkout Tiket Berbayar (QRIS/VA), Gate Check-in Scanner, dan Admin Analytics Console.</td>
+          </tr>
+          <tr>
+            <td><strong>Link Repositori GitHub</strong></td>
+            <td><a href="https://github.com/ArfianPutraPratama/Evently" target="_blank">https://github.com/ArfianPutraPratama/Evently</a></td>
+          </tr>
+          <tr>
+            <td><strong>Link Live Demo Server</strong></td>
+            <td><a href="http://100.117.102.84:5177" target="_blank">http://100.117.102.84:5177</a> (Tailscale Network)</td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section>
+      <h2>🤝 PART 3: COMMUNITY COMMITMENT</h2>
+
+      <h3>1. Mengapa kamu tertarik bergabung menjadi bagian dari komunitas SurabayaDev?</h3>
+      <p>SurabayaDev adalah pilar dan jangkar penggerak ekosistem teknologi di Jawa Timur selama 12 tahun terakhir. Konsistensi SurabayaDev dalam mengadakan workshop, seminar teknologi, dan mentoring telah menginspirasi banyak talenta digital, termasuk saya. Bergabung sebagai volunteer Divisi Developer Team adalah wujud nyata keinginan saya untuk mendedikasikan keahlian software engineering saya bagi komunitas, berkolaborasi dengan para praktisi hebat, serta berkontribusi langsung pada infrastruktur teknologi yang memberdayakan ribuan anggota komunitas di Surabaya.</p>
+
+      <h3>2. Kontribusi apa yang ingin kamu berikan untuk perkembangan komunitas developer di Surabaya?</h3>
+      <ul>
+        <li><strong>Pengembangan Infrastruktur Digital Komunitas:</strong> Merancang, memodernisasi, dan memelihara aplikasi internal SurabayaDev (portal event, sistem sertifikat otomatis, platform kurasi materi, dan bot interaktif).</li>
+        <li><strong>Knowledge Sharing & Mentorship:</strong> Berbagi wawasan seputar best practices arsitektur modern (Full-Stack Architecture, TypeScript, API Scalability, Cloud Containerization, dan AI Agents) melalui tech talk maupun artikel teknis.</li>
+        <li><strong>Inisiatif Open Source SurabayaDev:</strong> Membantu menginisiasi dan me-maintain repositori open source komunitas yang dapat menjadi wadah kontribusi nyata dan sarana belajar bagi mahasiswa/developer pemula di Surabaya.</li>
+      </ul>
+
+      <h3>3. Bagaimana cara kamu membagi waktu antara komunitas, kuliah/pekerjaan, dan aktivitas pribadi?</h3>
+      <p>Saya menerapkan prinsip <strong>Time-Boxing</strong> dan <strong>Matriks Eisenhower</strong> secara disiplin:</p>
+      <ul>
+        <li><strong>Prioritas Utama (Pekerjaan/Studi):</strong> Diselesaikan secara fokus pada jam kerja formal (pagi hingga sore hari).</li>
+        <li><strong>Dedikasi Komunitas:</strong> Mengalokasikan blok waktu khusus (6–10 jam per minggu di malam hari dan akhir pekan) yang konsisten dan terjadwal untuk tugas-tugas SurabayaDev.</li>
+        <li><strong>Kolaborasi Async-First:</strong> Mengutamakan dokumentasi teknis yang jelas, tiket task yang terstruktur (GitHub Issues/Projects), dan komunikasi asinkron yang efektif sehingga tugas dapat diselesaikan tanpa hambatan birokrasi dan saling memblokir (*non-blocking*).</li>
+      </ul>
+
+      <h3>4. Apakah kamu bersedia tetap aktif berkontribusi setelah SurabayaDev 12th Anniversary selesai? Jelaskan bentuk kontribusi yang ingin dilakukan.</h3>
+      <p><strong>Ya, saya berkomitmen penuh untuk terus aktif berkontribusi pasca perayaan 12 tahun.</strong></p>
+      <p>Bentuk kontribusi jangka panjang yang ingin saya jalankan meliputi:</p>
+      <ul>
+        <li>Menjadi <em>active maintainer</em> dan pengembang fitur lanjutan pada platform digital SurabayaDev.</li>
+        <li>Membantu divisi acara dalam merancang kurikulum teknis dan hands-on lab untuk meetup bulanan SurabayaDev.</li>
+        <li>Berperan sebagai *onboarding mentor* bagi volunteer baru generasi berikutnya guna memastikan regenerasi komunitas berjalan berkelanjutan dan berkualitas.</li>
+      </ul>
+
+      <h3>5. Ceritakan pengalaman ketika bekerja dalam tim komunitas, organisasi, atau project open source.</h3>
+      <p>Saya memiliki pengalaman berkolaborasi dalam tim pengembangan perangkat lunak dengan alur kerja berbasis Git (GitHub Flow, Pull Requests, dan Peer Code Review). Dalam salah satu proyek tim, kami pernah menghadapi tantangan perbedaan opini terkait arsitektur basis data dan *merge conflict* pada modul pembayaran.</p>
+      <p>Melalui pendekatan komunikasi terbuka, diskusi teknis yang berfokus pada data/fakta, serta empati antar anggota tim, kami berhasil menyepakati arsitektur yang paling optimal dan menyelesaikan rilis tepat waktu. Pengalaman ini membentuk prinsip kerja saya bahwa keberhasilan engineering di komunitas tidak hanya ditentukan oleh kecakapan menulis kode, tetapi juga oleh <strong>komunikasi yang transparan, kerendahan hati untuk menerima masukan, serta komitmen terhadap visi bersama komunitas</strong>.</p>
+    </section>
+
+    <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: var(--slate-500);">
+      SurabayaDev 12th Anniversary • Developer Team Volunteer Recruitment • Disusun oleh Arfian Putra Pratama
+    </footer>
+  </div>
+
+</body>
+</html>
