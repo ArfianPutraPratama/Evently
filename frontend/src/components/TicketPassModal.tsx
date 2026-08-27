@@ -56,10 +56,11 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
       onClick={onClose}
       className="fixed inset-0 z-50 flex items-start justify-center p-4 py-6 sm:py-10 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto"
     >
-      {/* Floating Close Button Top-Right (Always visible) */}
+      {/* Floating Close Button Top-Right (Always visible on screen, hidden on print) */}
       <button
+        id="ticket-floating-close-btn"
         onClick={onClose}
-        className="fixed top-4 right-4 z-[60] p-2.5 rounded-full bg-zinc-900/95 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-white/20 shadow-2xl transition-all print:hidden flex items-center gap-1.5 text-xs font-semibold"
+        className="fixed top-4 right-4 z-[60] p-2.5 rounded-full bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-950 border border-slate-200 shadow-xl transition-all print:hidden ticket-close-btn flex items-center gap-1.5 text-xs font-semibold"
         title="Tutup Tiket (Esc)"
       >
         <X className="w-4 h-4" />
@@ -69,20 +70,20 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
       {/* Modal Dialog Content Container */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-3xl my-auto space-y-4 animate-fade-in"
+        className="relative w-full max-w-3xl my-auto space-y-3 animate-fade-in"
       >
         {/* Top Header Label */}
-        <div className="flex items-center justify-between text-white print:hidden px-1">
+        <div className="flex items-center justify-between text-slate-800 print:hidden px-1">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs font-mono uppercase tracking-widest text-zinc-400">
+            <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+            <span className="text-xs font-mono uppercase tracking-widest text-slate-200 font-bold">
               E-TICKET ADMISSION PASS • SURABAYADEV 12TH
             </span>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-zinc-300 hover:text-white transition-all text-xs flex items-center gap-1"
+            className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all text-xs flex items-center gap-1"
           >
             <X className="w-4 h-4" />
             <span>Tutup (Esc)</span>
@@ -98,10 +99,10 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
         >
           {/* 1. Left Vertical Color Brand Accent Strip */}
           <div className="w-full md:w-3.5 h-2 md:h-auto flex md:flex-col shrink-0">
-            <div className="flex-1 bg-amber-400" />
-            <div className="flex-1 bg-emerald-500" />
-            <div className="flex-1 bg-rose-500" />
-            <div className="flex-1 bg-indigo-600" />
+            <div className="flex-1" style={{ backgroundColor: '#fbbf24', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }} />
+            <div className="flex-1" style={{ backgroundColor: '#10b981', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }} />
+            <div className="flex-1" style={{ backgroundColor: '#f43f5e', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }} />
+            <div className="flex-1" style={{ backgroundColor: '#4f46e5', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }} />
           </div>
 
           {/* 2. Main Ticket Body (Left Section) */}
@@ -258,24 +259,32 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
           {/* 3. Perforated Tear-off Line with Semicircle Notches */}
           <div className="relative hidden md:flex flex-col items-center justify-between w-0 shrink-0 select-none">
             {/* Top Semicircle Punch Notch */}
-            <div className="w-6 h-6 -mt-3 -ml-3 rounded-full bg-[#090a0f] border border-zinc-800 z-10" />
+            <div className="notch-cutout w-6 h-6 -mt-3 -ml-3 rounded-full bg-[#090a0f] print:bg-white border border-zinc-800 print:border-zinc-300 z-10" />
 
             {/* Vertical Perforated Dashed Line */}
             <div className="w-px h-full border-r-2 border-dashed border-zinc-300 my-1" />
 
             {/* Bottom Semicircle Punch Notch */}
-            <div className="w-6 h-6 -mb-3 -ml-3 rounded-full bg-[#090a0f] border border-zinc-800 z-10" />
+            <div className="notch-cutout w-6 h-6 -mb-3 -ml-3 rounded-full bg-[#090a0f] print:bg-white border border-zinc-800 print:border-zinc-300 z-10" />
           </div>
 
           {/* Mobile Horizontal Tear-off Line */}
           <div className="md:hidden relative flex items-center justify-between h-0 select-none">
-            <div className="w-6 h-6 -ml-3 -mt-3 rounded-full bg-[#090a0f] border border-zinc-800 z-10" />
+            <div className="notch-cutout w-6 h-6 -ml-3 -mt-3 rounded-full bg-[#090a0f] print:bg-white border border-zinc-800 print:border-zinc-300 z-10" />
             <div className="w-full border-b-2 border-dashed border-zinc-300" />
-            <div className="w-6 h-6 -mr-3 -mt-3 rounded-full bg-[#090a0f] border border-zinc-800 z-10" />
+            <div className="notch-cutout w-6 h-6 -mr-3 -mt-3 rounded-full bg-[#090a0f] print:bg-white border border-zinc-800 print:border-zinc-300 z-10" />
           </div>
 
           {/* 4. Ticket Stub (Right Section / Admission Gate Stub) */}
-          <div className="w-full md:w-60 bg-gradient-to-br from-indigo-700 via-indigo-600 to-blue-700 p-5 sm:p-6 text-white flex flex-col items-center justify-between text-center shrink-0 space-y-3 relative overflow-hidden">
+          <div
+            className="ticket-stub w-full md:w-60 p-5 sm:p-6 text-white flex flex-col items-center justify-between text-center shrink-0 space-y-3 relative overflow-hidden"
+            style={{
+              backgroundColor: '#4338ca',
+              backgroundImage: 'linear-gradient(135deg, #4338ca 0%, #312e81 100%)',
+              WebkitPrintColorAdjust: 'exact',
+              printColorAdjust: 'exact',
+            }}
+          >
             {/* Subtle Watermark on Stub */}
             <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none select-none">
               <span className="font-black text-7xl">12</span>
@@ -292,7 +301,14 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
             </div>
 
             {/* High-Contrast QR Code Container */}
-            <div className="p-3 bg-white rounded-xl shadow-xl space-y-1.5 relative z-10">
+            <div
+              className="p-3 bg-white rounded-xl shadow-xl space-y-1.5 relative z-10"
+              style={{
+                backgroundColor: '#ffffff',
+                WebkitPrintColorAdjust: 'exact',
+                printColorAdjust: 'exact',
+              }}
+            >
               <QRCodeSVG
                 value={ticket.qr_payload || ticket.ticket_code}
                 size={135}
@@ -318,7 +334,7 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
             </div>
 
             {/* Half-circle notch on right edge (like classic admission ticket) */}
-            <div className="hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#090a0f] border border-zinc-800" />
+            <div className="notch-cutout hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#090a0f] print:bg-white border border-zinc-800 print:border-zinc-300" />
           </div>
         </div>
 
@@ -331,9 +347,9 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
             <button
               type="button"
               onClick={() => onOpenCertificate && onOpenCertificate(registration)}
-              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-amber-500/20 hover:from-amber-500/30 hover:to-amber-500/30 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-500/10"
+              className="w-full py-2.5 px-4 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
             >
-              <Award className="w-4 h-4 text-amber-400" />
+              <Award className="w-4 h-4 text-amber-600" />
               <span>Unduh E-Sertifikat Kehadiran Resmi</span>
             </button>
           )}
@@ -342,27 +358,27 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
           <div className="grid grid-cols-3 gap-2">
             <button
               onClick={handleCopyCode}
-              className="py-2.5 px-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-zinc-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+              className="py-2.5 px-3 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs"
             >
-              <Copy className="w-3.5 h-3.5 text-zinc-400" />
-              <span>{copied ? 'Kode Disalin!' : 'Salin Kode'}</span>
+              <Copy className="w-3.5 h-3.5 text-slate-500" />
+              <span>{copied ? 'Disalin!' : 'Salin Kode'}</span>
             </button>
 
             <a
               href={`https://wa.me/?text=${encodeURIComponent(`Halo! Saya sudah memiliki tiket resmi "${event.title}" di SurabayaDev 12th Anniversary! Kode Tiket: ${ticket.ticket_code}. Lokasi: ${event.location} 🚀`)}`}
               target="_blank"
               rel="noreferrer"
-              className="py-2.5 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+              className="py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs"
             >
-              <Share2 className="w-3.5 h-3.5 text-emerald-400" />
+              <Share2 className="w-3.5 h-3.5 text-emerald-600" />
               <span>Share WA</span>
             </a>
 
             <button
               onClick={handlePrint}
-              className="py-2.5 px-3 rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md"
+              className="py-2.5 px-3 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm"
             >
-              <Printer className="w-3.5 h-3.5 text-zinc-950" />
+              <Printer className="w-3.5 h-3.5" />
               <span>Cetak / PDF</span>
             </button>
           </div>
@@ -370,7 +386,7 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="w-full py-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] text-zinc-400 hover:text-white text-xs font-medium border border-white/[0.06] transition-all"
+            className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-medium border border-white/20 transition-all"
           >
             Tutup Tiket (Esc)
           </button>
