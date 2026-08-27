@@ -146,9 +146,16 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
                   <span className="text-base font-black text-zinc-900 tracking-tight">
                     E-Ticket Digital
                   </span>
-                  <span className="text-[10px] text-emerald-700 font-semibold">
-                    Free Community Pass
-                  </span>
+                  {event.price && event.price > 0 ? (
+                    <span className="text-[10px] text-amber-900 font-bold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      VIP Paid Pass (Rp {event.price.toLocaleString('id-ID')} • Lunas)
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-emerald-700 font-semibold">
+                      Free Community Pass
+                    </span>
+                  )}
                 </div>
 
                 {/* Cell Top-Right: Name & ID */}

@@ -107,6 +107,7 @@ class EventController extends Controller
             'event_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:event_date',
             'quota' => 'required|integer|min:1',
+            'price' => 'nullable|integer|min:0',
             'banner_url' => 'nullable|url',
             'speaker_name' => 'nullable|string|max:255',
             'speaker_role' => 'nullable|string|max:255',
@@ -115,6 +116,7 @@ class EventController extends Controller
 
         $slug = Str::slug($validated['title']) . '-' . Str::lower(Str::random(5));
         $validated['slug'] = $slug;
+        $validated['price'] = (int) ($validated['price'] ?? 0);
         $validated['registered_count'] = 0;
 
         $event = Event::create($validated);
@@ -141,6 +143,7 @@ class EventController extends Controller
             'event_date' => 'sometimes|required|date',
             'end_date' => 'nullable|date',
             'quota' => 'sometimes|required|integer|min:' . $event->registered_count,
+            'price' => 'nullable|integer|min:0',
             'banner_url' => 'nullable|url',
             'speaker_name' => 'nullable|string|max:255',
             'speaker_role' => 'nullable|string|max:255',

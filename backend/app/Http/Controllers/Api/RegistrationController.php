@@ -80,12 +80,18 @@ class RegistrationController extends Controller
                 $hmac = hash_hmac('sha256', json_encode($payloadData), $secretKey);
                 $qrPayload = json_encode(array_merge($payloadData, ['hmac' => $hmac]));
 
-                // 7. Create registration record
+                $isPaid = (int) $event->price > 0;
+                $paymentMethod = $request->input('payment_method', $isPaid ? 'qris' : 'free');
+
+                // 7. Create registration record with payment details
                 $registration = Registration::create([
                     'event_id' => $event->id,
                     'user_id' => $user->id,
                     'registration_code' => $regCode,
                     'status' => 'confirmed',
+                    'payment_status' => $isPaid ? 'paid' : 'free',
+                    'payment_method' => $paymentMethod,
+                    'amount_paid' => (int) $event->price,
                     'notes' => $request->input('notes'),
                     'registered_at' => now(),
                 ]);

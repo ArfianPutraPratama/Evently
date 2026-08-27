@@ -124,10 +124,10 @@ class ApiService {
   }
 
   // --- Registration & Ticket APIs ---
-  async registerEvent(eventId: number, notes?: string): Promise<{ registration: Registration; ticket: Ticket; event: EventItem }> {
+  async registerEvent(eventId: number, notes?: string, paymentMethod?: string): Promise<{ registration: Registration; ticket: Ticket; event: EventItem }> {
     const res = await this.request<ApiResponse<{ registration: Registration; ticket: Ticket; event: EventItem }>>('/registrations', {
       method: 'POST',
-      body: JSON.stringify({ event_id: eventId, notes }),
+      body: JSON.stringify({ event_id: eventId, notes, payment_method: paymentMethod }),
     });
     return res.data!;
   }

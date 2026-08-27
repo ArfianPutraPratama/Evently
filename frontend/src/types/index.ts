@@ -20,6 +20,7 @@ export interface EventItem {
   event_date: string;
   end_date?: string;
   quota: number;
+  price: number;
   registered_count: number;
   remaining_quota: number;
   is_sold_out: boolean;
@@ -51,6 +52,9 @@ export interface Registration {
   user_id: number;
   registration_code: string;
   status: 'confirmed' | 'cancelled';
+  payment_status?: 'free' | 'paid' | 'pending';
+  payment_method?: string;
+  amount_paid?: number;
   notes?: string;
   registered_at: string;
   event?: EventItem;
@@ -86,4 +90,5 @@ export interface DashboardMetrics {
   total_checked_in: number;
   total_issued: number;
   check_in_rate: number;
+  total_revenue?: number;
 }

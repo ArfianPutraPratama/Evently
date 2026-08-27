@@ -118,10 +118,19 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
             <X className="w-4 h-4" />
           </button>
 
-          <div className="absolute top-4 left-4">
+          <div className="absolute top-4 left-4 flex items-center gap-2">
             <span className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-white/95 text-slate-900 shadow-sm">
               {event.category}
             </span>
+            {event.price > 0 ? (
+              <span className="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md">
+                VIP Pass • Rp {event.price.toLocaleString('id-ID')}
+              </span>
+            ) : (
+              <span className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-600 text-white shadow-sm">
+                Gratis • Free Pass
+              </span>
+            )}
           </div>
 
           <div className="absolute bottom-4 left-6 right-6">
@@ -346,6 +355,8 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
                 className={`px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-sm ${
                   isSoldOut
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                    : event.price > 0
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 shadow-md font-extrabold'
                     : 'bg-slate-900 text-white hover:bg-slate-800'
                 }`}
               >
@@ -356,7 +367,11 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
                   </>
                 ) : (
                   <>
-                    <span>Daftar Sekarang</span>
+                    <span>
+                      {event.price > 0
+                        ? `Daftar & Bayar (Rp ${event.price.toLocaleString('id-ID')})`
+                        : 'Daftar Sekarang (Gratis)'}
+                    </span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}

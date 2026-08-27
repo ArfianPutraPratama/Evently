@@ -21,6 +21,7 @@ class Event extends Model
         'event_date',
         'end_date',
         'quota',
+        'price',
         'registered_count',
         'banner_url',
         'speaker_name',
@@ -34,6 +35,7 @@ class Event extends Model
             'event_date' => 'datetime',
             'end_date' => 'datetime',
             'quota' => 'integer',
+            'price' => 'integer',
             'registered_count' => 'integer',
             'is_published' => 'boolean',
         ];

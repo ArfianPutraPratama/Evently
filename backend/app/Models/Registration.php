@@ -16,6 +16,9 @@ class Registration extends Model
         'user_id',
         'registration_code',
         'status',
+        'payment_status',
+        'payment_method',
+        'amount_paid',
         'notes',
         'registered_at',
     ];
@@ -24,6 +27,7 @@ class Registration extends Model
     {
         return [
             'registered_at' => 'datetime',
+            'amount_paid' => 'integer',
         ];
     }
 

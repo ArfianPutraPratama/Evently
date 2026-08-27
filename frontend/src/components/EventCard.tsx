@@ -57,8 +57,12 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onSelect, onViewTic
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white shadow-sm backdrop-blur-md">
                 Sisa {event.remaining_quota}
               </span>
+            ) : event.price > 0 ? (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md backdrop-blur-md tracking-tight">
+                Rp {event.price.toLocaleString('id-ID')}
+              </span>
             ) : (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-black/40 text-white backdrop-blur-md">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-600 text-white shadow-sm backdrop-blur-md">
                 Gratis
               </span>
             )}
@@ -145,10 +149,18 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onSelect, onViewTic
             className={`w-full py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
               isSoldOut
                 ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                : event.price > 0
+                ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold shadow-sm'
                 : 'bg-slate-900 hover:bg-slate-800 text-white shadow-sm'
             }`}
           >
-            <span>{isSoldOut ? 'Kuota Habis' : 'Detail & Daftar'}</span>
+            <span>
+              {isSoldOut
+                ? 'Kuota Habis'
+                : event.price > 0
+                ? `Beli Tiket (Rp ${event.price.toLocaleString('id-ID')})`
+                : 'Detail & Daftar Gratis'}
+            </span>
             {!isSoldOut && <ArrowRight className="w-3.5 h-3.5" />}
           </button>
         )}

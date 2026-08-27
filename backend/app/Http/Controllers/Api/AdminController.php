@@ -21,6 +21,7 @@ class AdminController extends Controller
         $totalRegistrations = Registration::count();
         $totalCheckedIn = Ticket::where('status', 'checked_in')->count();
         $totalIssued = Ticket::where('status', 'issued')->count();
+        $totalRevenue = (int) Registration::where('payment_status', 'paid')->sum('amount_paid');
 
         $checkInRate = $totalRegistrations > 0 
             ? round(($totalCheckedIn / $totalRegistrations) * 100, 1) 
@@ -43,6 +44,7 @@ class AdminController extends Controller
                     'total_checked_in' => $totalCheckedIn,
                     'total_issued' => $totalIssued,
                     'check_in_rate' => $checkInRate,
+                    'total_revenue' => $totalRevenue,
                 ],
                 'events_summary' => $eventsSummary,
             ]
