@@ -107,7 +107,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, onOpe
                 </div>
 
                 <button
-                  onClick={logout}
+                  onClick={() => {
+                    logout();
+                    setCurrentTab('events');
+                  }}
                   className="p-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-all"
                   title="Logout Akun"
                 >
