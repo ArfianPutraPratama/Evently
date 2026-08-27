@@ -149,17 +149,19 @@ export const MyTicketsView: React.FC<MyTicketsViewProps> = ({
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {isCheckedIn && (
-                      <button
-                        type="button"
-                        onClick={() => onOpenCertificate && onOpenCertificate(reg)}
-                        className="flex items-center gap-1.5 py-1.5 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-xs font-bold transition-all shadow-xs"
-                        title="Buka E-Sertifikat Kehadiran"
-                      >
-                        <Award className="w-3.5 h-3.5 text-amber-600" />
-                        <span>Sertifikat</span>
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => onOpenCertificate && onOpenCertificate(reg)}
+                      className={`flex items-center gap-1.5 py-1.5 px-3 rounded-xl border text-xs font-bold transition-all shadow-xs ${
+                        isCheckedIn
+                          ? 'bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-800'
+                          : 'bg-slate-50 hover:bg-amber-50 border-slate-200 hover:border-amber-300 text-slate-700 hover:text-amber-900'
+                      }`}
+                      title={isCheckedIn ? 'Buka E-Sertifikat Resmi' : 'Pratinjau E-Sertifikat Kehadiran'}
+                    >
+                      <Award className={`w-3.5 h-3.5 ${isCheckedIn ? 'text-amber-600' : 'text-amber-500'}`} />
+                      <span>{isCheckedIn ? 'Sertifikat' : 'Sertifikat'}</span>
+                    </button>
 
                     <button
                       onClick={() => onOpenTicketPass(reg)}

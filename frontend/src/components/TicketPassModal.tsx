@@ -351,17 +351,15 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
         {/* ACTION TOOLBAR & CERTIFICATE CONTROLS */}
         {/* ========================================================================= */}
         <div className="space-y-2.5 print:hidden">
-          {/* E-Certificate Button for Checked-in Attendees */}
-          {isCheckedIn && (
-            <button
-              type="button"
-              onClick={() => onOpenCertificate && onOpenCertificate(registration)}
-              className="w-full py-2.5 px-4 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
-            >
-              <Award className="w-4 h-4 text-amber-600" />
-              <span>Unduh E-Sertifikat Kehadiran Resmi</span>
-            </button>
-          )}
+          {/* E-Certificate Button */}
+          <button
+            type="button"
+            onClick={() => onOpenCertificate && onOpenCertificate(registration)}
+            className="w-full py-2.5 px-4 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
+          >
+            <Award className="w-4 h-4 text-amber-600" />
+            <span>{isCheckedIn ? 'Unduh E-Sertifikat Kehadiran Resmi' : 'Pratinjau E-Sertifikat Kehadiran'}</span>
+          </button>
 
           {/* Action Buttons Row */}
           <div className="grid grid-cols-3 gap-2">
