@@ -1,6 +1,10 @@
 import { ApiResponse, CheckInLog, DashboardMetrics, EventItem, Registration, Ticket, User } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8080/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (typeof window !== 'undefined'
+    ? `${window.location.protocol}//${window.location.hostname}:8080/api`
+    : 'http://127.0.0.1:8080/api');
 
 class ApiService {
   private token: string | null = null;

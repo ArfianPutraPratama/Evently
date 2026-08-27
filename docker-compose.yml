@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: evently-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: evently_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - evently-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: evently-backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      APP_NAME: Evently
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: "http://localhost:8080"
+      APP_KEY: base64:eZgqYmFzZTY0OnN1cmFiYXlhZGV2MTJzZWNyZXQ=
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: evently_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+    ports:
+      - "8080:8080"
+    networks:
+      - evently-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: evently-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5177:80"
+    networks:
+      - evently-net
+
+volumes:
+  postgres_data:
+
+networks:
+  evently-net:
+    driver: bridge
