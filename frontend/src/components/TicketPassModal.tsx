@@ -177,12 +177,12 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
               {/* Bottom Row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 border-t-2 border-zinc-800 divide-y-2 sm:divide-y-0 sm:divide-x-2 divide-zinc-800">
                 {/* Cell Bottom-Left: Date & Time */}
-                <div className="p-2.5 bg-white flex items-center justify-between">
+                <div className="p-3 bg-white flex flex-col justify-between space-y-1.5">
                   <div>
-                    <span className="text-[9px] text-zinc-500 font-bold uppercase block">
-                      Waktu Pelaksanaan
+                    <span className="text-[9px] text-zinc-500 font-bold uppercase block font-mono">
+                      WAKTU PELAKSANAAN
                     </span>
-                    <span className="font-bold text-zinc-900 text-xs">
+                    <span className="font-extrabold text-zinc-900 text-xs block">
                       {new Date(event.event_date).toLocaleDateString('id-ID', {
                         weekday: 'short',
                         day: 'numeric',
@@ -197,20 +197,21 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
                     href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${new Date(event.event_date).toISOString().replace(/-|:|\.\d\d\d/g, '')}/${new Date(new Date(event.event_date).getTime() + 4 * 3600000).toISOString().replace(/-|:|\.\d\d\d/g, '')}&details=${encodeURIComponent(event.description)}&location=${encodeURIComponent(event.location)}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-2 py-1 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-[10px] border border-indigo-200 transition-colors print:hidden shrink-0"
-                    title="Tambah ke Google Calendar"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold text-[11px] border border-teal-200/80 transition-all shadow-2xs print:hidden w-fit"
+                    title="Sinkronkan jadwal acara ke Google Calendar"
                   >
-                    + Calendar
+                    <Calendar className="w-3.5 h-3.5 text-teal-600" />
+                    <span>+ Simpan Google Calendar</span>
                   </a>
                 </div>
 
                 {/* Cell Bottom-Right: Venue & Location */}
-                <div className="p-2.5 bg-white flex items-center justify-between">
+                <div className="p-3 bg-white flex flex-col justify-between space-y-1.5">
                   <div className="min-w-0 pr-1">
-                    <span className="text-[9px] text-zinc-500 font-bold uppercase block">
-                      Lokasi Venue
+                    <span className="text-[9px] text-zinc-500 font-bold uppercase block font-mono">
+                      LOKASI VENUE
                     </span>
-                    <span className="font-bold text-zinc-900 text-xs truncate block">
+                    <span className="font-extrabold text-zinc-900 text-xs truncate block">
                       {event.location.split(',')[0]}
                     </span>
                   </div>
@@ -219,10 +220,11 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-[10px] border border-rose-200 transition-colors print:hidden shrink-0"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-800 font-bold text-[11px] border border-rose-200/80 transition-all shadow-2xs print:hidden w-fit"
                     title="Buka rute navigasi di Google Maps"
                   >
-                    Maps
+                    <MapPin className="w-3.5 h-3.5 text-rose-500" />
+                    <span>Buka Rute Google Maps ↗</span>
                   </a>
                 </div>
               </div>

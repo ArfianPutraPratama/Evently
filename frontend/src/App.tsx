@@ -12,7 +12,7 @@ import { CommitteeScanner } from './components/CommitteeScanner';
 import { AdminDashboard } from './components/AdminDashboard';
 import { MyTicketsView } from './components/MyTicketsView';
 import { AuthModal } from './components/AuthModal';
-import { Search, Loader2, X, Clock, ArrowRight, CheckCircle2, ShieldCheck, Sparkles, Star, Users } from 'lucide-react';
+import { Search, Loader2, X, Clock, ArrowRight, CheckCircle2, ShieldCheck, Sparkles, Star, Users, Calendar, MapPin } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { user } = useAuth();
@@ -286,16 +286,43 @@ export const App: React.FC = () => {
                     </div>
 
                     {/* Header of Badge Card */}
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-bold block">
-                        STATUS EVENT HARI-H
-                      </span>
-                      <h3 className="text-xl font-extrabold text-slate-900">
-                        Dyandra Convention Center
-                      </h3>
-                      <p className="text-xs text-slate-500">
-                        12 September 2026 • Surabaya, Jawa Timur
-                      </p>
+                    <div className="space-y-2">
+                      <div>
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-bold block">
+                          STATUS EVENT HARI-H
+                        </span>
+                        <h3 className="text-xl font-extrabold text-slate-900">
+                          Dyandra Convention Center
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          12 September 2026 • Jl. Basuki Rahmat No. 93-105, Surabaya
+                        </p>
+                      </div>
+
+                      {/* Prominent Direct Navigation & Calendar Action Strip */}
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <a
+                          href="https://www.google.com/maps/search/?api=1&query=Dyandra+Convention+Center+Surabaya"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs group"
+                          title="Buka rute peta di Google Maps"
+                        >
+                          <MapPin className="w-3.5 h-3.5 text-rose-600 group-hover:animate-bounce" />
+                          <span>Peta Maps ↗</span>
+                        </a>
+
+                        <a
+                          href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('SurabayaDev 12th Anniversary Tech Summit & Community Gathering')}&dates=20260912T010000Z/20260912T100000Z&details=${encodeURIComponent('Peringatan 12 tahun SurabayaDev: Tech Summit & Community Gathering')}&location=${encodeURIComponent('Dyandra Convention Center, Jl. Basuki Rahmat No. 93-105, Surabaya')}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="py-2 px-3 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-800 text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs group"
+                          title="Simpan jadwal acara ke Google Calendar"
+                        >
+                          <Calendar className="w-3.5 h-3.5 text-teal-600 group-hover:animate-bounce" />
+                          <span>+ Kalender</span>
+                        </a>
+                      </div>
                     </div>
 
                     {/* Live Ticking Countdown Timer */}
