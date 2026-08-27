@@ -1,15 +1,10 @@
-FROM php:8.2-cli-alpine
+FROM php:8.4-cli-alpine
 
-RUN apk add --no-cache \
-    postgresql-dev \
-    bash \
-    git \
-    curl \
-    libzip-dev \
-    zip \
-    unzip \
-    oniguruma-dev \
-    && docker-php-ext-install pdo pdo_pgsql pgsql mbstring pcntl bcmath
+# Fast precompiled PHP extensions installer (builds in seconds)
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+
+RUN apk add --no-cache bash git curl \
+    && install-php-extensions pdo_pgsql pgsql mbstring pcntl bcmath zip
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -17,7 +12,7 @@ WORKDIR /var/www
 
 COPY . .
 
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
 EXPOSE 8080
 
