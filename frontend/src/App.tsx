@@ -7,11 +7,12 @@ import { EventCard } from './components/EventCard';
 import { EventDetailModal } from './components/EventDetailModal';
 import { RegistrationModal } from './components/RegistrationModal';
 import { TicketPassModal } from './components/TicketPassModal';
+import { CertificateModal } from './components/CertificateModal';
 import { CommitteeScanner } from './components/CommitteeScanner';
 import { AdminDashboard } from './components/AdminDashboard';
 import { MyTicketsView } from './components/MyTicketsView';
 import { AuthModal } from './components/AuthModal';
-import { Search, Loader2, X } from 'lucide-react';
+import { Search, Loader2, X, Clock } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { user } = useAuth();
@@ -27,11 +28,39 @@ export const App: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
 
-  // Modals
+  // Modals State
   const [selectedEventForDetail, setSelectedEventForDetail] = useState<EventItem | null>(null);
   const [selectedEventForRegister, setSelectedEventForRegister] = useState<EventItem | null>(null);
   const [activeTicketRegistration, setActiveTicketRegistration] = useState<Registration | null>(null);
+  const [activeCertificateRegistration, setActiveCertificateRegistration] = useState<Registration | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  // Countdown to SurabayaDev 12th Anniversary Gate Opening (12 September 2026 08:30 WIB)
+  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number }>({
+    days: 16,
+    hours: 14,
+    minutes: 30,
+    seconds: 0,
+  });
+
+  useEffect(() => {
+    const targetDate = new Date('2026-09-12T08:30:00+07:00').getTime();
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const difference = targetDate - now;
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((difference % (1000 * 60)) / 1000),
+        });
+      }
+    };
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const fetchEvents = async () => {
     setIsLoadingEvents(true);
@@ -123,13 +152,15 @@ export const App: React.FC = () => {
           </button>
         </div>
       )}
+
+      {/* Main Tab Content */}
       <main className="flex-grow">
         {currentTab === 'events' && (
           <div className="space-y-12 pb-20">
-            {/* Minimalist Hero Section */}
-            <section className="relative pt-16 pb-14 px-4 sm:px-6 lg:px-8 border-b border-white/[0.05] bg-subtle-dots">
+            {/* Minimalist Hero Section with Countdown */}
+            <section className="relative pt-14 pb-12 px-4 sm:px-6 lg:px-8 border-b border-white/[0.05] bg-subtle-dots">
               <div className="max-w-4xl mx-auto text-center space-y-5">
-                {/* Subtle Indicator Pill */}
+                {/* Indicator Pill */}
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] text-zinc-400 text-[11px] font-medium">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span>SurabayaDev 12th Anniversary • Official Event Platform</span>
@@ -144,8 +175,37 @@ export const App: React.FC = () => {
                   Pendaftaran resmi sesi Conference, Hands-on Workshop, Hackathon, dan Masterclass dengan sistem tiket digital ber-QR Code terenkripsi.
                 </p>
 
+                {/* Live Ticking Countdown Timer */}
+                <div className="pt-2 flex flex-col items-center gap-2">
+                  <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold flex items-center gap-1.5">
+                    <Clock className="w-3 h-3 text-indigo-400" />
+                    Hitung Mundur Pembukaan Gate Dyandra:
+                  </span>
+                  <div className="flex items-center gap-2 font-mono">
+                    <div className="px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-center min-w-[56px]">
+                      <span className="text-lg font-black text-white block">{timeLeft.days}</span>
+                      <span className="text-[9px] text-zinc-500 uppercase font-sans">Hari</span>
+                    </div>
+                    <span className="text-zinc-600 font-bold">:</span>
+                    <div className="px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-center min-w-[56px]">
+                      <span className="text-lg font-black text-white block">{timeLeft.hours}</span>
+                      <span className="text-[9px] text-zinc-500 uppercase font-sans">Jam</span>
+                    </div>
+                    <span className="text-zinc-600 font-bold">:</span>
+                    <div className="px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-center min-w-[56px]">
+                      <span className="text-lg font-black text-white block">{timeLeft.minutes}</span>
+                      <span className="text-[9px] text-zinc-500 uppercase font-sans">Menit</span>
+                    </div>
+                    <span className="text-zinc-600 font-bold">:</span>
+                    <div className="px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-center min-w-[56px]">
+                      <span className="text-lg font-black text-indigo-400 block">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                      <span className="text-[9px] text-zinc-500 uppercase font-sans">Detik</span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Minimalist Stat Strip */}
-                <div className="pt-6 grid grid-cols-3 max-w-lg mx-auto divide-x divide-white/[0.08] border-y border-white/[0.06] py-3 text-center">
+                <div className="pt-4 grid grid-cols-3 max-w-lg mx-auto divide-x divide-white/[0.08] border-y border-white/[0.06] py-3 text-center">
                   <div>
                     <span className="text-lg sm:text-xl font-bold text-white block">1.000+</span>
                     <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Kuota Peserta</span>
@@ -231,6 +291,42 @@ export const App: React.FC = () => {
                   ))}
                 </div>
               )}
+
+              {/* Community Ecosystem & Partners Showcase */}
+              <div className="pt-12 border-t border-white/[0.06] space-y-4">
+                <div className="text-center space-y-1">
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">
+                    Jejaring Ekosistem & Community Partners
+                  </h4>
+                  <p className="text-[11px] text-zinc-500">
+                    Didukung oleh komunitas developer, inkubator teknologi, dan perguruan tinggi terkemuka di Jawa Timur
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 pt-2">
+                  {[
+                    { name: 'GDG Surabaya', tag: 'Google Developer Group' },
+                    { name: 'AWS User Group', tag: 'East Java Cloud' },
+                    { name: 'Flutter Surabaya', tag: 'Mobile Ecosystem' },
+                    { name: 'ITS Surabaya', tag: 'Informatika & Vokasi' },
+                    { name: 'UNAIR Surabaya', tag: 'Sains & Data' },
+                    { name: 'DILo Surabaya', tag: 'Digital Lounge Hub' },
+                    { name: 'Startup East Java', tag: 'Tech Collective' },
+                  ].map((partner, pIdx) => (
+                    <div
+                      key={pIdx}
+                      className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.12] text-center space-y-0.5 transition-all group"
+                    >
+                      <span className="font-semibold text-xs text-zinc-300 group-hover:text-white block transition-colors">
+                        {partner.name}
+                      </span>
+                      <span className="text-[9px] text-zinc-600 block truncate">
+                        {partner.tag}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </section>
           </div>
         )}
@@ -238,6 +334,7 @@ export const App: React.FC = () => {
         {currentTab === 'my-tickets' && (
           <MyTicketsView
             onOpenTicketPass={(reg) => setActiveTicketRegistration(reg)}
+            onOpenCertificate={(reg) => setActiveCertificateRegistration(reg)}
             onExploreEvents={() => setCurrentTab('events')}
           />
         )}
@@ -271,6 +368,13 @@ export const App: React.FC = () => {
         registration={activeTicketRegistration}
         isOpen={!!activeTicketRegistration}
         onClose={() => setActiveTicketRegistration(null)}
+        onOpenCertificate={(reg) => setActiveCertificateRegistration(reg)}
+      />
+
+      <CertificateModal
+        registration={activeCertificateRegistration}
+        isOpen={!!activeCertificateRegistration}
+        onClose={() => setActiveCertificateRegistration(null)}
       />
 
       <AuthModal

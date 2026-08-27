@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { Registration } from '../types';
-import { Ticket as TicketIcon, Calendar, MapPin, QrCode, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Ticket as TicketIcon, Calendar, MapPin, QrCode, CheckCircle2, Award, Clock, Loader2 } from 'lucide-react';
 
 interface MyTicketsViewProps {
   onOpenTicketPass: (registration: Registration) => void;
+  onOpenCertificate?: (registration: Registration) => void;
   onExploreEvents: () => void;
 }
 
-export const MyTicketsView: React.FC<MyTicketsViewProps> = ({ onOpenTicketPass, onExploreEvents }) => {
+export const MyTicketsView: React.FC<MyTicketsViewProps> = ({
+  onOpenTicketPass,
+  onOpenCertificate,
+  onExploreEvents,
+}) => {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -122,19 +127,33 @@ export const MyTicketsView: React.FC<MyTicketsViewProps> = ({ onOpenTicketPass, 
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-3">
+                <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between gap-3">
                   <div>
-                    <span className="text-[10px] text-slate-500 block">KODE TIKET</span>
-                    <span className="text-xs font-mono font-bold text-slate-200">{ticket.ticket_code}</span>
+                    <span className="text-[10px] text-zinc-500 block font-mono">KODE TIKET</span>
+                    <span className="text-xs font-mono font-bold text-zinc-200">{ticket.ticket_code}</span>
                   </div>
 
-                  <button
-                    onClick={() => onOpenTicketPass(reg)}
-                    className="flex items-center gap-2 py-2 px-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-xs font-bold shadow-md shadow-indigo-600/25 transition-all"
-                  >
-                    <QrCode className="w-3.5 h-3.5" />
-                    <span>Lihat QR Pass</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {isCheckedIn && (
+                      <button
+                        type="button"
+                        onClick={() => onOpenCertificate && onOpenCertificate(reg)}
+                        className="flex items-center gap-1.5 py-1.5 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-semibold transition-all"
+                        title="Buka E-Sertifikat Kehadiran"
+                      >
+                        <Award className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Sertifikat</span>
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => onOpenTicketPass(reg)}
+                      className="flex items-center gap-1.5 py-1.5 px-3.5 rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 text-xs font-semibold shadow-sm transition-all"
+                    >
+                      <QrCode className="w-3.5 h-3.5" />
+                      <span>Tiket Pass</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );

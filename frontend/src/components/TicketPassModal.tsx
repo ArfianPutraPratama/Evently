@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Registration, Ticket } from '../types';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, Calendar, MapPin, Check, ShieldCheck, Printer, Copy } from 'lucide-react';
+import { X, Calendar, MapPin, Check, ShieldCheck, Printer, Copy, Award } from 'lucide-react';
 
 interface TicketPassModalProps {
   registration: Registration | null;
   ticket?: Ticket | null;
   isOpen: boolean;
   onClose: () => void;
+  onOpenCertificate?: (reg: Registration) => void;
 }
 
 export const TicketPassModal: React.FC<TicketPassModalProps> = ({
@@ -15,6 +16,7 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
   ticket: explicitTicket,
   isOpen,
   onClose,
+  onOpenCertificate,
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -181,14 +183,25 @@ export const TicketPassModal: React.FC<TicketPassModalProps> = ({
             >
               <span>Share WA</span>
             </a>
-            <button
-              onClick={handlePrint}
-              className="py-2 px-2.5 rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-sm"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Cetak</span>
-            </button>
           </div>
+
+          {/* E-Certificate Button for Checked-in Attendees */}
+          {ticket.status === 'checked_in' ? (
+            <div className="pt-2 border-t border-white/[0.06] print:hidden">
+              <button
+                type="button"
+                onClick={() => onOpenCertificate && onOpenCertificate(registration)}
+                className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-amber-500/20 hover:from-amber-500/30 hover:to-amber-500/30 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
+              >
+                <Award className="w-4 h-4 text-amber-400" />
+                <span>Unduh E-Sertifikat Kehadiran Resmi</span>
+              </button>
+            </div>
+          ) : (
+            <div className="pt-2 text-center text-[10px] text-zinc-500 font-mono print:hidden">
+              🔒 E-Sertifikat kehadiran akan terbuka otomatis setelah check-in di pintu gerbang.
+            </div>
+          )}
         </div>
       </div>
     </div>
