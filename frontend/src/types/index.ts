@@ -73,6 +73,7 @@ export interface CheckInLog {
   created_at: string;
   ticket?: Ticket;
   scanner?: User;
+  validator?: User;
 }
 
 export interface ApiResponse<T = any> {
