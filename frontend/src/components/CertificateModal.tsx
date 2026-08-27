@@ -33,20 +33,37 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
     window.print();
   };
 
+  // Close on Escape key
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-3xl my-6 rounded-2xl overflow-hidden bg-[#10131c] border border-white/[0.12] shadow-2xl">
-        {/* Modal Controls */}
-        <div className="flex items-center justify-between p-4 border-b border-white/[0.06] bg-black/40 print:hidden">
-          <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold">
-            <Award className="w-4 h-4 text-amber-400" />
-            <span>E-Sertifikat Kehadiran Resmi SurabayaDev 12th Anniversary</span>
+    <div
+      onClick={onClose}
+      className="certificate-modal-wrapper fixed inset-0 z-50 flex items-start justify-center p-4 py-6 sm:py-10 bg-black/60 backdrop-blur-sm animate-fade-in overflow-y-auto"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="certificate-dialog-card relative w-full max-w-4xl my-auto rounded-3xl overflow-hidden bg-white border border-slate-200 shadow-2xl"
+      >
+        {/* Modal Controls (Hidden in Print) */}
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50 print:hidden">
+          <div className="flex items-center gap-2 text-teal-800 text-xs font-bold">
+            <Award className="w-4 h-4 text-amber-500" />
+            <span>E-Sertifikat Kehadiran Resmi • SurabayaDev 12th Anniversary</span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 text-xs font-bold transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold transition-all shadow-sm"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Cetak / Simpan PDF</span>
@@ -54,110 +71,135 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 hover:text-white transition-all"
+              className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition-all"
+              title="Tutup (Esc)"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Certificate Printable Canvas */}
+        {/* Certificate Printable Canvas (Optimized for A4 Landscape Print) */}
         <div
           id="printable-certificate"
-          className="p-8 sm:p-12 space-y-8 bg-gradient-to-b from-[#10131c] via-[#0d1017] to-[#090b10] border-8 border-double border-white/[0.08] m-4 rounded-xl relative"
+          className="p-6 sm:p-10 space-y-5 bg-[#fafaf9] border-6 border-double border-amber-600 m-3 sm:m-4 rounded-2xl relative text-slate-900"
+          style={{
+            backgroundColor: '#fafaf9',
+            borderColor: '#d97706',
+            WebkitPrintColorAdjust: 'exact',
+            printColorAdjust: 'exact',
+          }}
         >
           {/* Subtle Watermark Logo */}
           <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none">
-            <span className="font-mono text-[180px] font-black text-white">12TH</span>
+            <span className="font-mono text-[180px] font-black text-slate-900">12TH</span>
           </div>
 
           {/* Certificate Header */}
-          <div className="text-center space-y-2 relative">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] uppercase font-bold tracking-widest">
-              <Award className="w-3.5 h-3.5" />
+          <div className="text-center space-y-1.5 relative z-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-[10px] uppercase font-bold tracking-widest border border-amber-300">
+              <Award className="w-3.5 h-3.5 text-amber-700" />
               <span>Certificate of Attendance & Participation</span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight pt-2">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight pt-1">
               SURABAYADEV 12TH ANNIVERSARY
             </h2>
-            <p className="text-xs text-zinc-400 font-medium tracking-wide">
-              Membangun Ekosistem Developer & Inovasi Teknologi Kota Surabaya
+            <p className="text-xs text-slate-500 font-medium tracking-wide">
+              Membangun Ekosistem Developer & Inovasi Teknologi Masa Depan di Kota Surabaya
             </p>
           </div>
 
           {/* Recipient Notice */}
-          <div className="text-center space-y-3 relative">
-            <p className="text-xs text-zinc-500 uppercase tracking-widest font-semibold">
-              Sertifikat Ini Diberikan Kepada:
+          <div className="text-center space-y-2 relative z-10">
+            <p className="text-[11px] text-slate-500 uppercase tracking-widest font-semibold">
+              Sertifikat Kehadiran Ini Resmi Diberikan Kepada:
             </p>
 
-            <h3 className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-100 to-indigo-300 font-sans tracking-tight border-b border-white/[0.1] pb-3 max-w-xl mx-auto">
-              {user?.name || 'Budi Developer'}
+            <h3 className="text-2xl sm:text-4xl font-black text-slate-900 font-sans tracking-tight border-b-2 border-amber-400/40 pb-2 max-w-xl mx-auto">
+              {user?.name || 'Peserta Terdaftar'}
             </h3>
 
-            <p className="text-xs sm:text-sm text-zinc-300 max-w-xl mx-auto leading-relaxed pt-2">
+            <p className="text-xs text-slate-600 max-w-xl mx-auto leading-relaxed pt-1">
               Atas kehadiran dan partisipasi aktif dalam sesi:
             </p>
-            <p className="text-base sm:text-lg font-bold text-indigo-300 max-w-lg mx-auto leading-snug">
+            <p className="text-base sm:text-lg font-bold text-teal-800 max-w-xl mx-auto leading-snug">
               "{event.title}"
             </p>
-            <span className="inline-block px-3 py-0.5 rounded-full text-[10px] font-semibold uppercase bg-white/[0.05] border border-white/10 text-zinc-400">
-              Kategori: {event.category} • Venue: {event.location.split(',')[0]}
-            </span>
           </div>
 
-          {/* Signatures & Security Validation Footer */}
-          <div className="pt-6 border-t border-white/[0.08] grid grid-cols-3 items-end text-xs relative gap-4">
-            {/* Signature 1 */}
-            <div className="text-center space-y-1">
-              <div className="h-12 flex items-center justify-center">
-                <span className="font-serif italic text-base text-zinc-400 font-semibold tracking-wider">
-                  Surya Kusuma
-                </span>
-              </div>
-              <div className="border-t border-white/[0.15] pt-1">
-                <p className="font-bold text-white text-xs">Surya Kusuma, M.Kom.</p>
-                <p className="text-[10px] text-zinc-500">Lead Curator SurabayaDev</p>
-              </div>
+          {/* Certificate Details Strip */}
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-200 text-center relative z-10 text-xs">
+            <div>
+              <span className="text-[9px] uppercase font-bold text-slate-400 block font-mono">NOMOR SERTIFIKAT</span>
+              <span className="font-mono text-[11px] font-bold text-slate-800">{certNumber}</span>
             </div>
-
-            {/* QR Verification in Center */}
-            <div className="flex flex-col items-center justify-center space-y-1">
-              <div className="p-2 bg-white rounded-lg shadow-md">
-                <QRCodeSVG
-                  value={`https://surabayadev.org/verify/cert/${certNumber}`}
-                  size={64}
-                  level="M"
-                />
-              </div>
-              <span className="font-mono text-[9px] text-zinc-500 block">
-                {certNumber}
+            <div>
+              <span className="text-[9px] uppercase font-bold text-slate-400 block font-mono">TANGGAL PELAKSANAAN</span>
+              <span className="font-medium text-slate-800 text-[11px]">{eventDateFormatted}</span>
+            </div>
+            <div>
+              <span className="text-[9px] uppercase font-bold text-slate-400 block font-mono">STATUS VALIDASI</span>
+              <span className="inline-flex items-center gap-1 font-bold text-emerald-700 text-[11px]">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Presensi Terverifikasi Gate
               </span>
-              <div className="flex items-center gap-1 text-[9px] text-emerald-400 font-mono">
-                <ShieldCheck className="w-3 h-3" />
-                <span>Verified Attendance</span>
-              </div>
             </div>
+          </div>
 
-            {/* Signature 2 */}
-            <div className="text-center space-y-1">
-              <div className="h-12 flex items-center justify-center">
-                <span className="font-serif italic text-base text-zinc-400 font-semibold tracking-wider">
-                  Pratama Wijaya
+          {/* Signatures & Security Validation */}
+          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-slate-200 relative z-10">
+            <div className="text-center sm:text-left space-y-1">
+              <div className="h-9 flex items-end">
+                <span className="font-serif italic text-lg text-slate-800 tracking-wider">
+                  SurabayaDev Board
                 </span>
               </div>
-              <div className="border-t border-white/[0.15] pt-1">
-                <p className="font-bold text-white text-xs">Pratama Wijaya</p>
-                <p className="text-[10px] text-zinc-500">Ketua Panitia 12th Anniversary</p>
+              <p className="text-xs font-bold text-slate-900 border-t border-slate-300 pt-1">
+                Advisory Committee
+              </p>
+              <p className="text-[10px] text-slate-500">SurabayaDev 12th Anniversary</p>
+            </div>
+
+            {/* QR Verification Code */}
+            <div className="flex items-center gap-3 p-2.5 bg-white rounded-xl border border-slate-200 shadow-xs">
+              <QRCodeSVG
+                value={`https://surabayadev.org/verify-cert/${ticket.ticket_code}`}
+                size={58}
+                level="M"
+              />
+              <div className="text-left space-y-0.5">
+                <span className="text-[8px] uppercase font-bold text-slate-400 block font-mono">VERIFIKASI INTEGRITAS</span>
+                <span className="font-mono text-[10px] font-bold text-slate-900 block">{ticket.ticket_code}</span>
+                <span className="text-[9px] text-emerald-700 flex items-center gap-1 font-medium">
+                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                  Keaslian Terjamin
+                </span>
               </div>
             </div>
-          </div>
 
-          {/* Certificate Subtext */}
-          <div className="text-center text-[10px] text-zinc-600 font-mono border-t border-white/[0.04] pt-3">
-            Diterbitkan secara sah oleh Platform Evently SurabayaDev • Tanggal Pelaksanaan: {eventDateFormatted}
+            <div className="text-center sm:text-right space-y-1">
+              <div className="h-9 flex items-end justify-center sm:justify-end">
+                <span className="font-serif italic text-lg text-slate-800 tracking-wider">
+                  Program Lead
+                </span>
+              </div>
+              <p className="text-xs font-bold text-slate-900 border-t border-slate-300 pt-1">
+                Head of Technical Program
+              </p>
+              <p className="text-[10px] text-slate-500">SurabayaDev Tech Summit</p>
+            </div>
           </div>
+        </div>
+
+        {/* Modal Bottom Close Button (Hidden in Print) */}
+        <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end print:hidden">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold"
+          >
+            Tutup Jendela (Esc)
+          </button>
         </div>
       </div>
     </div>

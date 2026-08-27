@@ -104,8 +104,8 @@
   }
 
   @page {
-    size: auto;
-    margin: 12mm;
+    size: landscape;
+    margin: 8mm;
   }
 
   body {
@@ -173,11 +173,46 @@
     border-color: #d4d4d8 !important;
   }
 
-  #printable-certificate {
+  /* 5. PERFECT A4 LANDSCAPE CERTIFICATE (EXACTLY 1 PAGE, NO BLEED) */
+  .certificate-modal-wrapper {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  .certificate-dialog-card {
     box-shadow: none !important;
-    margin: 15px auto !important;
+    border: none !important;
+    background: transparent !important;
     max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  #printable-certificate {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 275mm !important;
+    height: 186mm !important;
+    max-height: 186mm !important;
+    margin: 0 auto !important;
+    padding: 8mm 14mm !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    background-color: #fafaf9 !important;
+    border: 6px double #d97706 !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    overflow: hidden !important;
   }
 }
