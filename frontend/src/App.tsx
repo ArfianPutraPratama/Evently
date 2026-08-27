@@ -154,7 +154,7 @@ export const App: React.FC = () => {
       )}
 
       {/* Main Tab Content */}
-      <main className="flex-grow">
+      <main className="flex-grow print:hidden">
         {currentTab === 'events' && (
           <div className="space-y-12 pb-20">
             {/* Minimalist Hero Section with Countdown */}

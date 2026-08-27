@@ -76,3 +76,82 @@
   background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
   background-size: 24px 24px;
 }
+
+/* ========================================================================= */
+/* PRINT OPTIMIZATION (PRESERVE EXACT COLORS & TICKET STUB IN PDF) */
+/* ========================================================================= */
+@media print {
+  /* 1. Force exact background colors and gradients in print/PDF */
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  @page {
+    size: auto;
+    margin: 12mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #090a0f !important;
+  }
+
+  /* 2. Hide everything that is not printable (including main background content) */
+  main,
+  header,
+  footer,
+  nav,
+  button,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* 3. Reset modal overlay so the ticket prints cleanly in document flow */
+  .fixed {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  /* 4. Force horizontal layout for the ticket voucher */
+  #printable-ticket {
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+    max-width: 820px !important;
+    margin: 25px auto !important;
+    box-shadow: none !important;
+    border: 1px solid #d4d4d8 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  #printable-ticket .ticket-stub {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 240px !important;
+    min-width: 240px !important;
+    background-color: #3730a3 !important;
+    color: #ffffff !important;
+  }
+
+  #printable-ticket .notch-cutout {
+    background-color: #ffffff !important;
+    border-color: #d4d4d8 !important;
+  }
+
+  #printable-certificate {
+    box-shadow: none !important;
+    margin: 15px auto !important;
+    max-width: 100% !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
